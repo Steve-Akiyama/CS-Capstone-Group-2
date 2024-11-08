@@ -56,7 +56,8 @@ class TutorAI:
     def quiz_text(self, text, count):
         questions = self.question_chain.invoke({"count": count, "text": text}) # Get the set of questions
         question_set = questions.rstrip().split('\n') # Split the questions into a list
-        del question_set[0] # Remove the first entry as it's blank
+        question_set.remove('')
+        question_set.remove(' ')
 
         return question_set
     
