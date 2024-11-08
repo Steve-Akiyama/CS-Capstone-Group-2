@@ -1,3 +1,7 @@
+# first download docker desktop
+# to run the code we need 2 terminals. On the first terminal launch docker with this "docker run -p 6333:6333 qdrant/qdrant" line and on the 
+# second terminal run the pythin script using "python vdatabase.py"
+
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
 import numpy as np
