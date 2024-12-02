@@ -1,3 +1,23 @@
+"""
+------------------------------------------------------------
+File: terminal.py
+Description:
+    This script acts as a terminal frontend for the backend. 
+    Should go unused in the final product.
+
+Author: Steven Akiyama
+Date: November 2024
+Version: 1.0
+
+Usage:
+    From parent directory: python backend/terminal.py
+    From local directory: python terminal.py 
+
+Future Updates:
+    None planned.
+------------------------------------------------------------
+"""
+
 from tutorai import TutorAI
 
 from dotenv import load_dotenv # Allows you to load environment variables from a .env file
@@ -7,7 +27,6 @@ load_dotenv() # Loads environment variables
 
 # Make sure you have a .env file with an API key!
 api_key = os.getenv("OPENAI_API_KEY") # Retrieves the API key from the .env file
-
 
 
 # Create an instance of the tutor

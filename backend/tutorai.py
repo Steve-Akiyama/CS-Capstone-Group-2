@@ -1,10 +1,32 @@
+"""
+------------------------------------------------------------
+File: tutorai.py
+Description:
+    This class uses LangChain to access OpenAI's ChatGPT-4.
+
+Author: Steven Akiyama, Grant O'Connor
+Date: November 2024
+Version: 1.0
+
+Usage:
+    Used as a method of accessing LLMs and getting their input,
+    analysis, and summary on the textbook data.
+
+Future updates:
+    - TutorAI should incorperate RAG (Retreival-Augmented Generation)
+    instead of hard-coded textbook content.
+    - TutorAI should be able to present and evaluate multiple-choice
+    questions and answers
+------------------------------------------------------------
+"""
+
 from langchain_openai import OpenAI # Creates an instance of OpenAI's language model ("It's a ChatGPT!")
 from langchain_core.runnables.base import RunnableSequence # Used to chain together runnable components such as prompts and models, to let you invoke sequentially
 from langchain.prompts import PromptTemplate  # Allows you to create templates for prompts you send to the model
 
 class TutorAI:
 
-    llm = "No LLM initalized! __init__ failed to run."
+    __llm = "No LLM initalized! __init__ failed to run."
     summary = "No summary initalized"
     document_text = ""
     __topic = ""
@@ -14,7 +36,7 @@ class TutorAI:
     # Initalizes the LLM, with temperature and prompt setup.
     def __init__(self, api_key=None, temp=0.5, topic=None, rec_accuracy=0.85, req_accuracy=0.6):
         # Initialize OpenAI's model with desired temperature, which defines the randomness of the output. Higher = more random!
-        self.llm = OpenAI(temperature=temp, api_key=api_key)
+        self.__llm = OpenAI(temperature=temp, api_key=api_key)
 
         # Initalizes it with a certain topic
         self.__topic = topic
@@ -42,22 +64,22 @@ class TutorAI:
         # Summarization
         sum_template = "You are a tutor teaching a student about " + self.__topic + ". Summarize the following text:\n\n{text}\n\nSummary:"
         sum_prompt = PromptTemplate(input_variables=["text"], template=sum_template)
-        self.summarization_chain = RunnableSequence(sum_prompt | self.llm) # Set up the summarization chain
+        self.summarization_chain = RunnableSequence(sum_prompt | self.__llm) # Set up the summarization chain
 
         # Short-Answer Questions
         shortanswer_question_template = "You are a tutor teaching students " + self.__topic + ", tasked with asking students {count} questions about the following text:\n\n{text}\n\nQuestions should be seperated by a new line. Questions:"
         shortanswer_question_prompt = PromptTemplate(input_variables=["text"], template=shortanswer_question_template)
-        self.shortanswer_question_chain = RunnableSequence(shortanswer_question_prompt | self.llm)
+        self.shortanswer_question_chain = RunnableSequence(shortanswer_question_prompt | self.__llm)
 
         # Multiple-Choice Questions
         multiplechoice_question_template = "Create {count} multiple-choice questions about the following text in JSON format. Please state the correct answer before the question. Text:\n\n{text}\n\nQuestions:"
         multiplechoice_question_prompt = PromptTemplate(input_variables=["text"], template=multiplechoice_question_template)
-        self.multiplechoice_question_chain = RunnableSequence(multiplechoice_question_prompt | self.llm)
+        self.multiplechoice_question_chain = RunnableSequence(multiplechoice_question_prompt | self.__llm)
 
         # Short-Answer Evaluation
         shortanswer_evaluation_template = "You are a tutor teaching a student about " + self.__topic + ". Use the following text:\n\n{text}\n\nTo evaluate the following question and answer. Please evaluate the answer based on the text with a score of 1-10 and an explanation for your score, quoting the text. Question:\n\n{question}\n\n Student's answer:\n\n{answer}\n\n The template should look like this: Score:\nEvaluation:"
         shortanswer_evaluation_prompt = PromptTemplate(input_variables=["text", "question", "answer"], template=shortanswer_evaluation_template)
-        self.shortanswer_evaluation_chain = RunnableSequence(shortanswer_evaluation_prompt | self.llm)
+        self.shortanswer_evaluation_chain = RunnableSequence(shortanswer_evaluation_prompt | self.__llm)
 
     # Summarizes the text
     def summarize_text(self, text):
