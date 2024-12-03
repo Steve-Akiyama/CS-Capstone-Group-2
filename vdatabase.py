@@ -75,27 +75,75 @@ from qdrant_client import QdrantClient
 from qdrant_client.http import models
 import numpy as np
 import os
-
-# connect to Qdrant database
+import re
+import uuid
+# Connect to Qdrant database
 client = QdrantClient(host="127.0.0.1", port=6333)
 
-# fucntion to create a new collection with the contents of the chapter
-def create_collection(collection_name, vector_size):
+# Helper Functions
+def clean_newlines(input_string):
+    """Replaces newline escape characters with spaces."""
+    return input_string.replace('\n', ' ')
+
+def split_text_with_context(text):
+    """Splits the text into sentences and groups them with context."""
+    sentence_endings = r'(?<=[.!?])\s+'
+    sentences = re.split(sentence_endings, text)
+    chunks_with_context = []
+    for i, sentence in enumerate(sentences):
+        preceding = sentences[max(0, i-2):i]  # Two preceding sentences
+        following = sentences[i+1:i+2]       # One following sentence
+        chunk = " ".join(preceding + [sentence] + following)
+        chunks_with_context.append(chunk)
+    return chunks_with_context
+
+def process_string_to_chunks(input_string):
+    """Processes a string into contextual chunks."""
+    cleaned_string = clean_newlines(input_string)
+    return split_text_with_context(cleaned_string)
+
+def generate_random_vectors(num_vectors, vector_size):
+    """Generates random vectors for testing."""
+    vectors = np.random.rand(num_vectors, vector_size).tolist()
+    payloads = [{"info": f"Vector {i}"} for i in range(num_vectors)]
+    return vectors, payloads
+
+def add_to_collection(collection_name, new_chunks):
+    """Adds chunks to an existing collection."""
+    points = [
+        models.PointStruct(
+            id=str(uuid.uuid4()),  # Generate a valid UUID for each point ID
+            vector=np.random.rand(128).tolist(),  # Example: Random 128-dimensional vector
+            payload={"text": chunk}  # Add the chunk as payload
+        )
+        for chunk in new_chunks
+    ]
+    
+    client.upsert(collection_name=collection_name, points=points)
+    print(f"Added {len(points)} chunks to collection '{collection_name}'.")
+# CRUD Operations
+def create_collection(collection_name, vector_size=128):
+    """Creates a new collection in Qdrant."""
     client.recreate_collection(
         collection_name=collection_name,
         vectors_config=models.VectorParams(size=vector_size, distance=models.Distance.COSINE)
     )
     print(f"Collection '{collection_name}' created with vector size {vector_size}.")
 
-# function to add vectors into the collection
-def add_vectors_to_collection(collection_name, vectors, payloads):
-    points = [models.PointStruct(id=i, vector=vector, payload=payload)
-              for i, (vector, payload) in enumerate(zip(vectors, payloads))]
-    client.upsert(collection_name=collection_name, points=points)
-    print(f"Added {len(points)} vectors to collection '{collection_name}'.")
+def list_collections():
+    """Lists all collections in Qdrant."""
+    collections = client.get_collections().collections
+    print("Available Collections:")
+    for collection in collections:
+        print(f"- {collection.name}")
 
-# Function to search for similar vectors
+def delete_collection(collection_name):
+    """Deletes a collection."""
+    client.delete_collection(collection_name=collection_name)
+    print(f"Collection '{collection_name}' deleted.")
+
 def search_collection(collection_name, query_vector, top_k=5):
+    """Searches for similar vectors in a collection."""
     search_result = client.search(
         collection_name=collection_name,
         query_vector=query_vector,
@@ -105,66 +153,65 @@ def search_collection(collection_name, query_vector, top_k=5):
     for i, result in enumerate(search_result):
         print(f"{i + 1}. ID: {result.id}, Score: {result.score}, Payload: {result.payload}")
 
-# Function to list all collections
-def list_collections():
-    collections = client.get_collections().collections
-    print("Available Collections:")
-    for collection in collections:
-        print(f"- {collection.name}")
+def add_collection_from_file():
+    """Adds a collection by reading a text file and processing it into chunks."""
+    collection_name = input("Enter the name of the new collection: ")
+    filename = input("Enter the name of the text file to add (e.g., textbook.txt): ")
 
-# Function to delete a collection
-def delete_collection(collection_name):
-    client.delete_collection(collection_name=collection_name)
-    print(f"Collection '{collection_name}' deleted.")
+    if not os.path.isfile(filename):
+        print(f"Error: File '{filename}' not found.")
+        return
 
-# Helper function to generate random vectors for testing
-def generate_random_vectors(num_vectors, vector_size):
-    vectors = np.random.rand(num_vectors, vector_size).tolist()
-    payloads = [{"info": f"Vector {i}"} for i in range(num_vectors)]
-    return vectors, payloads
+    try:
+        with open(filename, 'r', encoding='utf-8') as file:
+            content = file.read()
+            chunks = process_string_to_chunks(content)
+            if client.collection_exists(collection_name):
+                print(f"Collection '{collection_name}' already exists. Recreating...")
+                client.delete_collection(collection_name=collection_name)
+            client.create_collection(
+                collection_name=collection_name,
+                vectors_config=models.VectorParams(size=128, distance=models.Distance.COSINE)
+            )
+            print(f"Collection '{collection_name}' created. Adding chunks...")
+            add_to_collection(collection_name, chunks)
+            print(f"Successfully added {len(chunks)} chunks from '{filename}' to the '{collection_name}' collection.")
+    except Exception as e:
+        print(f"Error: {e}")
 
-# main function
-def main():
-    vector_size = 128  # Example vector size. this we probably will need to change
+
+def main_menu():
+    """Main menu for Qdrant vector database management."""
     while True:
         print("\nQdrant Vector Database Management")
-        print("1. Create Collection")
-        print("2. Add Vectors to Collection")
-        print("3. Search Collection")
-        print("4. List Collections")
-        print("5. Delete Collection")
+        print("1. List Collections")
+        print("2. Create Collection")
+        print("3. Delete Collection")
+        print("4. Add Collection from File")
+        print("5. Search Collection")
         print("0. Exit")
         choice = input("Enter your choice: ")
 
         if choice == '1':
-            collection_name = input("Enter collection name: ")
-            create_collection(collection_name, vector_size)
-        
+            list_collections()
         elif choice == '2':
-            collection_name = input("Enter collection name: ")
-            num_vectors = int(input("Enter the number of vectors to add: "))
-            vectors, payloads = generate_random_vectors(num_vectors, vector_size)
-            add_vectors_to_collection(collection_name, vectors, payloads)
-        
+            collection_name = input("Enter the name of the new collection: ")
+            create_collection(collection_name)
         elif choice == '3':
-            collection_name = input("Enter collection name: ")
-            query_vector = np.random.rand(vector_size).tolist()  # Example random query vector
+            collection_name = input("Enter the name of the collection to delete: ")
+            delete_collection(collection_name)
+        elif choice == '4':
+            add_collection_from_file()
+        elif choice == '5':
+            collection_name = input("Enter the name of the collection to search: ")
+            query_vector = np.random.rand(128).tolist()  # Example query vector
             top_k = int(input("Enter the number of results to retrieve: "))
             search_collection(collection_name, query_vector, top_k)
-        
-        elif choice == '4':
-            list_collections()
-        
-        elif choice == '5':
-            collection_name = input("Enter collection name: ")
-            delete_collection(collection_name)
-        
         elif choice == '0':
             print("Exiting...")
             break
-        
         else:
             print("Invalid choice. Please try again.")
 
 if __name__ == "__main__":
-    main()
+    main_menu()
