@@ -1,139 +1,124 @@
-.App {
-  text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* General Reset */
-* {
+/* General Styles */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f5f5f5;
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
-  font-family: 'Arial', sans-serif;
 }
 
-/* Body Styling */
-body {
-  background-color: #f4f4f9;
+.app-container {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.app-title {
+  text-align: center;
   color: #333;
+}
+
+/* Textbook Content */
+.textbook-container, .summary-container {
+  margin: 20px 0;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #f9f9f9;
+}
+
+.textbook-content {
+  font-family: Georgia, serif;
   font-size: 16px;
   line-height: 1.6;
-  padding: 20px;
+  color: #444;
 }
 
-/* Main Container */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 40px;
-  background-color: white;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+.summary-content {
+  font-size: 14px;
+  color: #555;
+  font-style: italic;
 }
 
-/* Heading Styles */
-h1 {
-  font-size: 2.5rem;
-  color: #2c3e50;
-  margin-bottom: 20px;
-  text-align: center;
+/* Chat Section */
+.chat-container {
+  margin: 20px 0;
 }
 
-h2 {
-  font-size: 1.8rem;
-  color: #34495e;
-  margin-bottom: 15px;
-}
-
-/* Form and Input Styling */
-form {
-  margin-top: 20px;
+.chat-bubble-container {
+  margin: 10px 0;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
 }
 
-input {
-  padding: 12px 20px;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  width: 70%;
-  margin-right: 10px;
-  transition: all 0.3s ease-in-out;
+.chat-bubble {
+  max-width: 80%;
+  margin: 5px 0;
+  padding: 10px 15px;
+  border-radius: 20px;
+  word-wrap: break-word;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
-input:focus {
-  border-color: #3498db;
-  outline: none;
-  box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+.user-bubble {
+  background: #d1e7ff;
+  align-self: flex-start;
+  border: 1px solid #a6d4f7;
 }
 
-button {
-  padding: 12px 20px;
-  font-size: 1rem;
-  background-color: #3498db;
+.user-answer {
+  background: #e6ffe6;
+  align-self: flex-end;
+  border: 1px solid #b3f0b3;
+}
+
+.ai-response {
+  background: #fff4cc;
+  align-self: flex-start;
+  border: 1px solid #ffd966;
+}
+
+/* Current Question Section */
+.current-question {
+  margin: 20px 0;
+  padding: 10px;
+  background: #f0f8ff;
+  border-left: 4px solid #5bc0de;
+}
+
+/* Input Form */
+.input-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.input-form input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.input-form button {
+  padding: 10px 20px;
+  background: #007bff;
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.3s ease;
 }
 
-button:hover {
-  background-color: #2980b9;
+.input-form button:hover {
+  background: #0056b3;
 }
 
-/* Response Display */
-div {
-  margin-top: 30px;
-}
-
-p {
-  font-size: 1.1rem;
-  color: #555;
-  margin-bottom: 10px;
-}
-
-/* List Styling */
-ul {
-  list-style-type: none;
-}
-
-ul li {
-  font-size: 1.1rem;
-  padding: 5px 0;
-  border-bottom: 1px solid #eee;
+/* Completion Message */
+.completion-message {
+  text-align: center;
+  font-size: 16px;
+  color: green;
 }

@@ -10,11 +10,11 @@ Version: 1.0
 
 Usage:
     Used as a method of accessing LLMs and getting their input,
-    analysis, and summary on the textbook data.
+    analysis, and summary on the document data.
 
 Future updates:
     - TutorAI should incorperate RAG (Retreival-Augmented Generation)
-    instead of hard-coded textbook content.
+    instead of hard-coded document content.
     - TutorAI should be able to present and evaluate multiple-choice
     questions and answers
 ------------------------------------------------------------
@@ -48,16 +48,29 @@ class TutorAI:
         # Initalize prompts
         self.__prompt_init()
 
-        # Import or create textbook text
+        # Import or create document text
         self.document_text = """
-        On Monday, September 16, 2013, a gunman killed 12 people as the workday began at the
-        Washington Navy Yard in Washington, DC. Aaron Alexis, 34, had a troubled history: he thought that he was
-        being controlled by radio waves. He called the police to complain about voices in his head and being under
-        surveillance by “shadowy forces” (Thomas, Levine, Date, & Cloherty, 2013). While Alexis’s actions cannot be
-        excused, it is clear that he had some form of mental illness. Mental illness is not necessarily a cause of
-        violence; it is far more likely that the mentally ill will be victims rather than perpetrators of violence (Stuart,
-        2003). If, however, Alexis had received the help he needed, this tragedy might have been averted.
+        According to the American Psychiatric Association, a psychological disorder, or mental disorder, is “a
+        syndrome characterized by clinically significant disturbance in an individual's cognition, emotion regulation,
+        or behavior that reflects a dysfunction in the psychological, biological, or developmental processes underlying
+        mental functioning. Mental disorders are usually associated with significant distress in social, occupational, or
+        other important activities” (2013). Psychopathology is the study of psychological disorders, including their
+        symptoms, etiology (i.e., their causes), and treatment. The term
+        psychopathology can also refer to the
+        manifestation of a psychological disorder. Although consensus can be difficult, it is extremely important for
+        mental health professionals to agree on what kinds of thoughts, feelings, and behaviors are truly abnormal in
+        the sense that they genuinely indicate the presence of psychopathology. Certain patterns of behavior and inner
+        experience can easily be labeled as abnormal and clearly signify some kind of psychological disturbance. The
+        person who washes their hands 40 times per day and the person who claims to hear the voices of demons
+        exhibit behaviors and inner experiences that most would regard as abnormal: beliefs and behaviors that
+        suggest the existence of a psychological disorder. But, consider the nervousness a young man feels when
+        talking to an attractive person or the loneliness and longing for home a first-year student experiences during
+        her first semester of college—these feelings may not be regularly present, but they fall in the range of normal.
+        So, what kinds of thoughts, feelings, and behaviors represent a true psychological disorder? Psychologists work
+        to distinguish psychological disorders from inner experiences and behaviors that are merely situational,
+        idiosyncratic, or unconventional.
         """
+        
 
     # Initalizes prompts necessary for the tutor
     def __prompt_init(self):
