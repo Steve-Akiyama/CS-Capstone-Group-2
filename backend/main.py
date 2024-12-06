@@ -2,17 +2,18 @@
 ------------------------------------------------------------
 File: main.py
 Description:
-    This script acts as a launcher for the web frontend.
+    Acts as a backend for TutorAI
 
 Author: Steven Akiyama
-Date: November 2024
+Date: 05
 Version: 1.0
 
 Usage:
-    None yet.
+    Handles API calls from the front-end
 
 Future Updates:
-    Base implementation required.
+    When live, will need to modify allow_origins to accomadate 
+    the actual link. Will also need add features as TutorAI gains them.
 ------------------------------------------------------------
 """
 from fastapi import FastAPI
@@ -29,13 +30,11 @@ load_dotenv() # Loads environment variables
 api_key = os.getenv("OPENAI_API_KEY") # Retrieves the API key from the .env file
 
 app = FastAPI()
-
-
-my_tutor = TutorAI(api_key=api_key, temp=0.3, topic="Psychology")
+my_tutor = TutorAI(api_key=api_key, temp=0.3)
 
 # Dependancy to create a new instance of TutorAI for each request
 def get_tutor():
-    return TutorAI(api_key=api_key, temp=0.3, topic="Psychology") # Creates an instance of TutorAI
+    return TutorAI(api_key=api_key, temp=0.3) # Creates an instance of TutorAI
 
 class Query(BaseModel):
     question: str
@@ -43,7 +42,7 @@ class Query(BaseModel):
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Adjust to your frontend URL
+    allow_origins=["http://localhost:5173"],  # Adjust to your frontend URL
     allow_credentials=True,
     allow_methods=["*"],  # Allow all methods (GET, POST, OPTIONS, etc.)
     allow_headers=["*"],  # Allow all headers
@@ -56,8 +55,8 @@ def read_root():
 
 @app.get("/generate-summary-and-questions")
 async def generate_summary_and_questions():
-    summary = my_tutor.summarize_text(my_tutor.document_text)
-    questions = my_tutor.shortanswer_questions_text(my_tutor.document_text, 3)
+    summary = my_tutor.summarize_text()
+    questions = my_tutor.shortanswer_questions(5, text=summary)
     return{"summary": summary, "questions": questions}
 
 @app.get("/retrieve-document")
@@ -78,6 +77,6 @@ async def query_llm(query: Query):
 
     # Process the question and user answer with your tutor instance
     # Assuming `my_tutor.process_query` handles both the question and answer
-    response = my_tutor.shortanswer_evaluate_answer(my_tutor.document_text, user_question, user_answer)
+    response, score = my_tutor.shortanswer_evaluate(user_question, user_answer)
 
-    return {"response": response}
+    return {"response": response, "score": score}

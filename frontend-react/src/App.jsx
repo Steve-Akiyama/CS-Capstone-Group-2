@@ -20,6 +20,7 @@ const App = () => {
     // DOCUMENT CONTENT
     const [summary, setSummary] = useState('');     // Summary of the document content
     const [document, setDocument] = useState('');  // Document content
+    const [score, setScore] = useState(0)
     
 
     useEffect(() => {
@@ -28,7 +29,7 @@ const App = () => {
                 const res = await axios.get(`${BASE_URL}/retrieve-document`);
                 setDocument(res.data.document)
             } catch (error) {
-                console.error("Error fetching document:", error)
+                console.error("Error fetching document:", error.response || error)
             }
         };
         fetchDocument();
@@ -67,10 +68,11 @@ const App = () => {
             // Store the user's response to the current question in the answers state
             setAnswers([
                 ...answers,
-                { question: questions[currentQuestionIndex], user_answer: userAnswer, response: res.data.response }
+                { question: questions[currentQuestionIndex], user_answer: userAnswer, response: res.data.response, score: res.data.score }
             ]);
     
             setAnswer(''); // Clear the input field for the next question
+            setScore(Number(res.data.score) + Number(score))
             setCurrentQuestionIndex(currentQuestionIndex + 1); // Move to the next question
         } catch (error) {
             console.error("Error querying LLM:", error); // Log any errors
@@ -110,6 +112,8 @@ const App = () => {
                         {answers[index] && (
                             <div className="chat-bubble ai-response">
                                 <strong>Response:</strong> {answers[index].response}
+                                <br></br>
+                                <strong>Score:</strong> {answers[index].score}
                             </div>
                         )}
                     </div>
@@ -117,10 +121,13 @@ const App = () => {
             </div>
 
             {/* Current Question Section */}
+
+            {currentQuestionIndex > 0 &&
             <div className="current-question">
-                <h3>Current Question:</h3>
-                {questions.length > 0 && <p>{questions[currentQuestionIndex]}</p>}
+                <h3>Current Score:</h3>
+                <p>{score}/{currentQuestionIndex * 10}</p>
             </div>
+            }
 
             {/* Input Form Section */}
             <form className="input-form" onSubmit={handleSubmit}>

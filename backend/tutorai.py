@@ -1,49 +1,47 @@
-"""
-------------------------------------------------------------
-File: tutorai.py
-Description:
-    This class uses LangChain to access OpenAI's ChatGPT-4.
-
-Author: Steven Akiyama, Grant O'Connor
-Date: November 2024
-Version: 1.0
-
-Usage:
-    Used as a method of accessing LLMs and getting their input,
-    analysis, and summary on the document data.
-
-Future updates:
-    - TutorAI should incorperate RAG (Retreival-Augmented Generation)
-    instead of hard-coded document content.
-    - TutorAI should be able to present and evaluate multiple-choice
-    questions and answers
-------------------------------------------------------------
-"""
-
 from langchain_openai import OpenAI # Creates an instance of OpenAI's language model ("It's a ChatGPT!")
 from langchain_core.runnables.base import RunnableSequence # Used to chain together runnable components such as prompts and models, to let you invoke sequentially
 from langchain.prompts import PromptTemplate  # Allows you to create templates for prompts you send to the model
+import re
 
 class TutorAI:
+    """
+    Description: To make calls to OpenAI's API.
 
-    __llm = "No LLM initalized! __init__ failed to run."
-    summary = "No summary initalized"
-    document_text = ""
-    __topic = ""
-    rec_accuracy = 0
-    req_accuracy = 0
+    Attributes:
+    ----------
+    api_key : str
+        API key for OpenAI's API
+    temp : float
+        Determinicity of the LLM responses.
+    rec_accuracy : float
+        Recommended accuracy for answers and responses.
+    req_accuracy : float
+        Required accuracy for answers and responses.
+    system_message : str
+        Startup message at the beginning of given prompts. 
 
-    # Initalizes the LLM, with temperature and prompt setup.
-    def __init__(self, api_key=None, temp=0.5, topic=None, rec_accuracy=0.85, req_accuracy=0.6):
+    Methods:
+    -------
+    summarize_text()
+        Summarizes the text inputted.
+    shortanswer_questions()
+        Creates short answer questions about the text inputted.
+    multiplechoice_questions()
+        Creates multiple-choice questions about the text inputted.
+    shortanswer_evaluate()
+        Evaluates short answer question and answer pairs.
+    set_document_text()
+        Sets a default option for text being inputted.
+    """
+    
+    def __init__(self, api_key="", temp=0.5, rec_accuracy=0.85, req_accuracy=0.6, system_message="You are a kind and helpful tutor teaching a student."):
         # Initialize OpenAI's model with desired temperature, which defines the randomness of the output. Higher = more random!
         self.__llm = OpenAI(temperature=temp, api_key=api_key)
-
-        # Initalizes it with a certain topic
-        self.__topic = topic
 
         # Initalizes some base variables
         self.rec_accuracy = rec_accuracy
         self.req_accuracy = req_accuracy
+        self.system_message = system_message
 
         # Initalize prompts
         self.__prompt_init()
@@ -70,64 +68,168 @@ class TutorAI:
         to distinguish psychological disorders from inner experiences and behaviors that are merely situational,
         idiosyncratic, or unconventional.
         """
-        
 
-    # Initalizes prompts necessary for the tutor
     def __prompt_init(self):
+        """
+        Initalizes the prompt templates.
+
+        Parameters:
+        ----------
+        None
+
+        Returns:
+        -------
+        None
+
+        Raises:
+        ------
+        None
+
+        """
         # Summarization
-        sum_template = "You are a tutor teaching a student about " + self.__topic + ". Summarize the following text:\n\n{text}\n\nSummary:"
+        sum_template = self.system_message + " Summarize the following text:\n\n{text}\n\nSummary:"
         sum_prompt = PromptTemplate(input_variables=["text"], template=sum_template)
         self.summarization_chain = RunnableSequence(sum_prompt | self.__llm) # Set up the summarization chain
 
         # Short-Answer Questions
-        shortanswer_question_template = "You are a tutor teaching students " + self.__topic + ", tasked with asking students {count} questions about the following text:\n\n{text}\n\nQuestions should be seperated by a new line. Questions:"
+        shortanswer_question_template = self.system_message + " You are tasked with asking students {count} questions about the following text:\n\n{text}\n\nQuestions should be seperated by a new line. Questions:"
         shortanswer_question_prompt = PromptTemplate(input_variables=["text"], template=shortanswer_question_template)
         self.shortanswer_question_chain = RunnableSequence(shortanswer_question_prompt | self.__llm)
 
         # Multiple-Choice Questions
-        multiplechoice_question_template = "Create {count} multiple-choice questions about the following text in JSON format. Please state the correct answer before the question. Text:\n\n{text}\n\nQuestions:"
+        multiplechoice_question_template = self.system_message + " Create {count} multiple-choice questions about the following text in JSON format. Please state the correct answer before the question. Text:\n\n{text}\n\nQuestions:"
         multiplechoice_question_prompt = PromptTemplate(input_variables=["text"], template=multiplechoice_question_template)
         self.multiplechoice_question_chain = RunnableSequence(multiplechoice_question_prompt | self.__llm)
 
         # Short-Answer Evaluation
-        shortanswer_evaluation_template = "You are a tutor teaching a student about " + self.__topic + ". Use the following text:\n\n{text}\n\nTo evaluate the following question and answer. Please evaluate the answer based on the text with a score of 1-10 and an explanation for your score, quoting the text. Question:\n\n{question}\n\n Student's answer:\n\n{answer}\n\n The template should look like this: Score:\nEvaluation:"
+        shortanswer_evaluation_template = self.system_message + " Use the following text:\n\n{text}\n\nTo evaluate the following question and answer. Please evaluate the answer based on the text with a score of 1-10 and an explanation for your score, quoting the text. Question:\n\n{question}\n\n Student's answer:\n\n{answer}\n\n The template should look like this: Score:\nEvaluation:"
         shortanswer_evaluation_prompt = PromptTemplate(input_variables=["text", "question", "answer"], template=shortanswer_evaluation_template)
         self.shortanswer_evaluation_chain = RunnableSequence(shortanswer_evaluation_prompt | self.__llm)
 
-    # Summarizes the text
-    def summarize_text(self, text):
+    def summarize_text(self, text=None):
+        """
+        Summarizes text through OpenAI's API
+    
+        Parameters:
+        ----------
+        text : str
+            Text to be summarized. If blank, uses the instances' document_text.
+    
+        Returns:
+        -------
+        str
+            Summary of the text provided.
+    
+        Raises:
+        ------
+        None:
+
+        """
+        if not text: text = self.document_text
         summary = self.summarization_chain.invoke({"text": text})
         self.summary = summary # Caches the summary
         return summary
     
-    # Creates short answer questions about the text
-    def shortanswer_questions_text(self, text, count):
+    def shortanswer_questions(self, count, text=None):
+        """
+        Creates <count> short answer questions about the provided text.
+    
+        Parameters:
+        ----------
+        count : int
+            How many questions to generate.
+        text : str
+            The text to create questions from. Will evaluate to document_text if not set.
+    
+        Returns:
+        -------
+        list
+            List of str, where each str is one question.
+            
+        Raises:
+        ------
+        None
+            
+        """
+        if not text: text = self.document_text
         questions = self.shortanswer_question_chain.invoke({"count": count, "text": text}) # Get the set of questions
         question_set = questions.strip().strip('\n').split('\n') # Split the questions into a list
         if '' in question_set:
             question_set.remove('')
+        for i in range(len(question_set)):
+            question_set[i] = re.sub(r'^\d+\.\s*', '', question_set[i])
 
         return question_set
     
-    # Creates multiple choice questions about the text
-    def multiplechoice_questions_text(self, text, count):
+    def multiplechoice_questions(self, count, text):
+        if not text: text = self.document_text
         questions = self.multiplechoice_question_chain.invoke({"count": count, "text": text})
         question_set = questions.rstrip(" \n").strip(" \n").split("\n\n")
         return question_set
     
-    # Evaluates the response to a short-answer question
-    def shortanswer_evaluate_answer(self, text, question, answer):
-        evaluation = self.shortanswer_evaluation_chain.invoke({"text": text, "question": question, "answer": answer})
-        return evaluation
+    def shortanswer_evaluate(self, question, answer, text=None):
+        """
+        Evaluates the responses to short-answer questions.
     
+        Parameters:
+        ----------
+        question : str
+            The question that is being evaluated
+        answer : str
+            The answer that is being evaluated
+        text : str 
+            The document that is being evaluated against. Will initalize to document_text if not set.
+    
+        Returns:
+        -------
+        str
+            Answer, Score (1-10)
+    
+        Raises:
+        ------
+        None
+            
+        """
+        if not text: text = self.document_text # Get the default text if text is not specified
+
+        # Have the llm evaluate
+        evaluation = self.shortanswer_evaluation_chain.invoke({"text": text, "question": question, "answer": answer})
+        score = " ".join(evaluation.split("/"))
+
+        # If possible, parse the evaluation so it is less ugly.
+        match = re.search(r'(?<=Evaluation: ).*', evaluation)
+        if match:
+            evaluation = match.group(0)  # Return the part after "Evaluation: "
+
+        # Retrieve the score from the evaluation
+        for word in score.split():
+            if word.isdigit():
+                score = word
+                break
+            
+        return evaluation, score
+
+    ####################################################################
+    # Setter functions
+    ####################################################################
+
+    # Updates the document text
+    def set_document_text(self, new_text):
+        self.document_text = new_text
+
+    ####################################################################
+    # Old/Decomissioned functions
+    ####################################################################
+
+    # Should not be used
     def shortanswer_complete_terminal(self, text, count):
-        questions = self.shortanswer_questions_text(text, count)
+        questions = self.shortanswer_questions(count, text)
         total_score = 0
         for question in questions:
             score = "N/A"
 
             answer = input("\n\nPlease answer the following question:\n" + question + "\n: ")
-            evaluation = self.shortanswer_evaluate_answer(self.document_text, question, answer)
+            evaluation = self.shortanswer_evaluate(question, answer, text)
             print(evaluation)
 
             score = " ".join(evaluation.split("/"))
