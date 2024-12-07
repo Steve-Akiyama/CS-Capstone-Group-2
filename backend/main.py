@@ -56,7 +56,7 @@ def read_root():
 @app.get("/generate-summary-and-questions")
 async def generate_summary_and_questions():
     summary = my_tutor.summarize_text()
-    questions = my_tutor.shortanswer_questions(5, text=summary)
+    questions = my_tutor.shortanswer_questions(5, my_tutor.document_text)
     return{"summary": summary, "questions": questions}
 
 @app.get("/retrieve-document")
