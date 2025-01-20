@@ -1,3 +1,48 @@
+"""
+Qdrant Textbook Chunking and Management Script
+===============================================
+
+This script processes textbook files into logical chunks based on sections and headings, 
+generates vector embeddings, and stores them in a Qdrant vector database. It also includes
+CRUD operations for managing Qdrant collections.
+
+Prerequisites:
+--------------
+1. Install Python 3.6 or later.
+2. Install required libraries:
+   - qdrant-client: `pip install qdrant-client`
+   - numpy: `pip install numpy`
+3. Run a Qdrant instance locally or remotely:
+   - For local setup, use Docker:
+     `docker run -p 6333:6333 qdrant/qdrant`
+4. Prepare a text file (e.g., `textbook.txt`) containing the content to process.
+
+How to Run:
+-----------
+1. Save this script as `qdrant_management.py`.
+2. Run the script in your terminal:
+   `python qdrant_management.py`
+3. Follow the interactive menu to perform tasks:
+   - Option 1: List existing collections.
+   - Option 2: Create a new collection in Qdrant.
+   - Option 3: Delete an existing collection.
+   - Option 4: Add a textbook to Qdrant.
+   - Option 5: Test the textbook chunking process.
+   - Option 0: Exit the program.
+
+Example Workflow:
+-----------------
+1. Start a local Qdrant instance using Docker.
+2. Use Option 4 to upload `textbook.txt` to a collection.
+3. Verify uploaded collections with Option 1.
+4. Retrieve or manage collections using Options 2 or 3.
+
+Notes:
+------
+- Ensure the text file is in the same directory or provide the full path.
+- Edit the `file_path` variable in test functions as needed.
+"""
+
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
 import numpy as np
@@ -14,40 +59,55 @@ def clean_newlines(input_string):
     """Replaces newline escape characters with spaces to make the text more readable."""
     return input_string.replace('\n', ' ')
 
-
 def preprocess_text_by_subjects(file_path):
-    """Splits the text into chunks by detecting subject boundaries such as headings or chapters."""
-    # Check if the file exists
+    """Splits the text into chunks by detecting section boundaries."""
     if not os.path.isfile(file_path):
         print(f"Error: File '{file_path}' not found.")
         return []
 
     try:
-        # Open the file and read its content line by line
         with open(file_path, 'r', encoding='utf-8') as file:
             lines = file.readlines()
 
-        chunks = []  # Store processed text chunks
-        current_chunk = []  # Store the current chunk being processed
+        chunks = []
+        current_chunk = []
+        section_header = None
 
         for line in lines:
-            # Detect potential subject headers (e.g., lines in ALL CAPS, starting with numbers, or specific keywords)
-            if line.strip().isupper() or re.match(r'^\d+(\.|:)?\s', line) or re.match(r'^(Chapter|Section|Topic)\s', line, re.IGNORECASE):
-                if current_chunk:  # Save the current chunk before starting a new one
-                    chunks.append(" ".join(current_chunk).strip())
+            # Detect main sections or subsections
+            if re.match(r'^\d+\.\d+\s', line) or line.strip().isupper():
+                # Save the current chunk with its section header
+                if current_chunk:
+                    chunks.append({
+                        "title": section_header.strip() if section_header else "Untitled",
+                        "content": " ".join(current_chunk).strip()
+                    })
                     current_chunk = []
-            current_chunk.append(line.strip())  # Add the current line to the chunk
+                section_header = line.strip()  # Update the current section header
+            elif re.match(r'^LEARNING OBJECTIVES|FIGURE|LINK TO LEARNING|NOTABLE RESEARCHERS', line, re.IGNORECASE):
+                # Treat these as sub-sections
+                if current_chunk:
+                    chunks.append({
+                        "title": section_header.strip() if section_header else "Untitled",
+                        "content": " ".join(current_chunk).strip()
+                    })
+                    current_chunk = []
+                section_header = line.strip()
+            else:
+                current_chunk.append(line.strip())
 
-        # Add the last chunk if it exists
+        # Add the final chunk
         if current_chunk:
-            chunks.append(" ".join(current_chunk).strip())
+            chunks.append({
+                "title": section_header.strip() if section_header else "Untitled",
+                "content": " ".join(current_chunk).strip()
+            })
 
-        print(f"Text split into {len(chunks)} chunks based on subjects.")
+        print(f"Text split into {len(chunks)} chunks based on textbook structure.")
         return chunks
     except Exception as e:
         print(f"Error processing text: {e}")
         return []
-
 
 def add_textbook_to_qdrant(collection_name, file_path):
     """Processes a textbook and adds its chunks to a specified Qdrant collection."""
@@ -64,7 +124,7 @@ def add_textbook_to_qdrant(collection_name, file_path):
         models.PointStruct(
             id=str(uuid.uuid4()),  # Generate a unique ID for each point
             vector=embedding,      # Assign the random embedding
-            payload={"text": chunk, "chunk_index": i}  # Store the chunk and its index as metadata
+            payload={"text": chunk['content'], "title": chunk['title'], "chunk_index": i}  # Store the chunk metadata
         )
         for i, (chunk, embedding) in enumerate(zip(chunks, embeddings))
     ]
@@ -87,7 +147,6 @@ def create_collection(collection_name, vector_size=128):
     )
     print(f"Collection '{collection_name}' created with vector size {vector_size}.")
 
-
 def list_collections():
     """Lists all existing collections in Qdrant."""
     # Fetch and display all collections
@@ -96,55 +155,10 @@ def list_collections():
     for collection in collections:
         print(f"- {collection.name}")
 
-
 def delete_collection(collection_name):
     """Deletes a specified collection from Qdrant."""
     client.delete_collection(collection_name=collection_name)
     print(f"Collection '{collection_name}' deleted.")
-
-
-def add_collection_from_file():
-    """Prompts the user to create a new collection from a text file."""
-    # Get the collection name and file path from the user
-    collection_name = input("Enter the name of the new collection: ")
-    filename = input("Enter the name of the text file to add (e.g., textbook.txt): ")
-
-    # Check if the file exists
-    if not os.path.isfile(filename):
-        print(f"Error: File '{filename}' not found.")
-        return
-
-    try:
-        # Process the file into chunks
-        chunks = preprocess_text_by_subjects(filename)
-        # Recreate the collection if it already exists
-        if client.collection_exists(collection_name):
-            print(f"Collection '{collection_name}' already exists. Recreating...")
-            client.delete_collection(collection_name=collection_name)
-        client.create_collection(
-            collection_name=collection_name,
-            vectors_config=models.VectorParams(size=128, distance=models.Distance.COSINE)
-        )
-        print(f"Collection '{collection_name}' created. Adding chunks...")
-        add_to_collection(collection_name, chunks)
-        print(f"Successfully added {len(chunks)} chunks from '{filename}' to the '{collection_name}' collection.")
-    except Exception as e:
-        print(f"Error: {e}")
-
-
-def add_to_collection(collection_name, new_chunks):
-    """Adds new chunks to an existing Qdrant collection."""
-    # Create data points with random embeddings and add them to the collection
-    points = [
-        models.PointStruct(
-            id=str(uuid.uuid4()),  # Generate a unique ID for each point
-            vector=np.random.rand(128).tolist(),  # Generate a random vector for each chunk
-            payload={"text": chunk}  # Store the chunk as metadata
-        )
-        for chunk in new_chunks
-    ]
-    client.upsert(collection_name=collection_name, points=points)
-    print(f"Added {len(points)} chunks to collection '{collection_name}'.")
 
 # Test Function
 def test_preprocess_text_by_subjects():
@@ -154,7 +168,7 @@ def test_preprocess_text_by_subjects():
     print(f"Generated {len(chunks)} chunks.")
     # Display the first 5 chunks for verification
     for idx, chunk in enumerate(chunks[:5]):
-        print(f"\nChunk {idx + 1}:\n{chunk}\n")
+        print(f"\nChunk {idx + 1}:\nTitle: {chunk['title']}\nContent: {chunk['content']}\n")
 
 # Main Menu
 def main_menu():
@@ -165,9 +179,8 @@ def main_menu():
         print("1. List Collections")
         print("2. Create Collection")
         print("3. Delete Collection")
-        print("4. Add Collection from File")
-        print("5. Add Textbook to Qdrant")
-        print("6. Test Textbook Preprocessing")
+        print("4. Add Textbook to Qdrant")
+        print("5. Test Textbook Preprocessing")
         print("0. Exit")
         # Get user input for menu choice
         choice = input("Enter your choice: ")
@@ -182,16 +195,12 @@ def main_menu():
             collection_name = input("Enter the name of the collection to delete: ")
             delete_collection(collection_name)
         elif choice == '4':
-            add_collection_from_file()
-        elif choice == '5':
             collection_name = input("Enter the collection name: ")
             file_path = input("Enter the path to the textbook file: ")
             add_textbook_to_qdrant(collection_name, file_path)
-        elif choice == '6':
+        elif choice == '5':
             file_path = input("Enter the path to the textbook file: ")
-            chunks = preprocess_text_by_subjects(file_path)
-            for idx, chunk in enumerate(chunks[:3]):
-                print(f"\nChunk {idx + 1}:\n{chunk}\n")
+            test_preprocess_text_by_subjects()
         elif choice == '0':
             print("Exiting...")
             break
