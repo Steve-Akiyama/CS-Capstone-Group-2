@@ -30,10 +30,20 @@ api_key = os.getenv("OPENAI_API_KEY") # Retrieves the API key from the .env file
 
 
 # Create an instance of the tutor
-my_tutor = TutorAI(api_key=api_key, temp=0.3, topic="Psychology")
+my_tutor = TutorAI(api_key=api_key, temp=0.5)
 
 # Summarize the text
 # summary = my_tutor.summarize_text(my_tutor.document_text)
 # print("Summary:", summary)
 
-my_tutor.shortanswer_complete_terminal(my_tutor.document_text, 5)
+# my_tutor.shortanswer_complete_terminal(my_tutor.document_text, 5)
+question_set = my_tutor.multiplechoice_questions(my_tutor.document_text, 3)
+
+print(question_set)
+
+for question in question_set:
+    print(question[:-1])
+    if my_tutor.multiplechoice_evaluate(question, input()):
+        print("Congrats! You got it correct.")
+    else:
+        print("Sorry, wrong answer! The correct answer was " + question[-1])

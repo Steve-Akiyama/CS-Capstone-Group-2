@@ -97,7 +97,7 @@ class TutorAI:
         self.shortanswer_question_chain = RunnableSequence(shortanswer_question_prompt | self.__llm)
 
         # Multiple-Choice Questions
-        multiplechoice_question_template = self.system_message + " Create {count} multiple-choice questions about the following text in JSON format. Please state the correct answer before the question. Text:\n\n{text}\n\nQuestions:"
+        multiplechoice_question_template = self.system_message + " Create {count} multiple-choice questions about the text. The format should be as follows: \"Question 1: <Insert Question>\"\"A) <Answer A>\"\"B) <Answer B>\"\"C) <Answer C>\"\"D) <Answer D>\"\"Correct Answer: <Letter of correct answer> Text:\n\n{text}\n\n"
         multiplechoice_question_prompt = PromptTemplate(input_variables=["text"], template=multiplechoice_question_template)
         self.multiplechoice_question_chain = RunnableSequence(multiplechoice_question_prompt | self.__llm)
 
@@ -161,11 +161,50 @@ class TutorAI:
 
         return question_set
     
-    def multiplechoice_questions(self, count, text):
+    def multiplechoice_questions(self, count, text=None):
+        # Set up the document text as default
         if not text: text = self.document_text
+
+        # Invoke the question chain
         questions = self.multiplechoice_question_chain.invoke({"count": count, "text": text})
-        question_set = questions.rstrip(" \n").strip(" \n").split("\n\n")
+        
+        # Split the return value by question
+        question_set = questions.replace('\n', '').split('Question')
+        question_set = [x for x in question_set if x != ''] # Clean the list
+
+        # Create a regex string
+        pattern = r"A\) |B\) |C\) |D\) |Correct Answer: "
+
+        # Split each question into question and answer segments
+        for idx, question in enumerate(question_set):
+            question_set[idx] = re.split(pattern, question.strip())
+
         return question_set
+    
+    def multiplechoice_evaluate(self, question, answer):
+
+        def letters_to_number(s):
+            """
+            Convert a letter sequence (A = 1, B = 2, ..., Z = 26, AA = 27, etc.) back to its corresponding number.
+
+            Args:
+                s (str): The letter sequence.
+
+            Returns:
+                int: The corresponding number.
+            """
+            s = s.upper()  # Ensure the input is in uppercase
+            n = 0
+
+            for char in s:
+                n = n * 26 + (ord(char) - 65 + 1)
+
+            return n
+        
+        if answer == letters_to_number(question[-1]) or letters_to_number(answer) == letters_to_number(question[-1]):
+            return True
+        else:
+            return False
     
     def shortanswer_evaluate(self, question, answer, text=None):
         """
