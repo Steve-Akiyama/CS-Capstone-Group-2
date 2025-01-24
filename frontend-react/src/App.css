@@ -1,0 +1,124 @@
+/* General Styles */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f5f5f5;
+  margin: 0;
+  padding: 0;
+}
+
+.app-container {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.app-title {
+  text-align: center;
+  color: #333;
+}
+
+/* Textbook Content */
+.textbook-container, .summary-container {
+  margin: 20px 0;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #f9f9f9;
+}
+
+.textbook-content {
+  font-family: Georgia, serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #444;
+}
+
+.summary-content {
+  font-size: 14px;
+  color: #555;
+  font-style: italic;
+}
+
+/* Chat Section */
+.chat-container {
+  margin: 20px 0;
+}
+
+.chat-bubble-container {
+  margin: 10px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-bubble {
+  max-width: 80%;
+  margin: 5px 0;
+  padding: 10px 15px;
+  border-radius: 20px;
+  word-wrap: break-word;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.user-bubble {
+  background: #d1e7ff;
+  align-self: flex-start;
+  border: 1px solid #a6d4f7;
+}
+
+.user-answer {
+  background: #e6ffe6;
+  align-self: flex-end;
+  border: 1px solid #b3f0b3;
+}
+
+.ai-response {
+  background: #fff4cc;
+  align-self: flex-start;
+  border: 1px solid #ffd966;
+}
+
+/* Current Question Section */
+.current-question {
+  margin: 20px 0;
+  padding: 10px;
+  background: #f0f8ff;
+  border-left: 4px solid #5bc0de;
+}
+
+/* Input Form */
+.input-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.input-form input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.input-form button {
+  padding: 10px 20px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.input-form button:hover {
+  background: #0056b3;
+}
+
+/* Completion Message */
+.completion-message {
+  text-align: center;
+  font-size: 16px;
+  color: green;
+}
