@@ -1,4 +1,3 @@
-
 /venv
 notes.txt
 .env
@@ -9,3 +8,7 @@ __pycache__/tutorai.cpython-311.pyc
 /backend/node_modules
 tempCodeRunnerFile.py
 /testdb
+=======
+.env
+/myenv
+notes.txt
