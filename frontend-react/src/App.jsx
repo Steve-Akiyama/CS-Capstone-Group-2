@@ -4,7 +4,7 @@ import axios from 'axios';
 import './App.css'; // Import the CSS file
 
 const BASE_URL = window.location.origin.includes('localhost')
-    ? 'http://localhost:8000'  // If running locally, assume backend is on localhost:8000
+    ? 'curl http://localhost:8000/your-api-endpoint'  // If running locally, assume backend is on localhost:8000
     : 'https://your-production-backend-url.com';  // Replace with your production backend URLconsole.log("API Base URL:", BASE_URL);
 
 const App = () => {
