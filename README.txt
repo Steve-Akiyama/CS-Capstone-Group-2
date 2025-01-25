@@ -22,3 +22,6 @@ We will collect data by testing the system with psychology students, tracking th
 Run this locally:
 From /backend:          uvicorn main:app --reload --host 0.0.0.0 --port 8000
 From /frontend-react:   npm run dev
+
+Locally hosted page will appear at:
+http://localhost:3000/

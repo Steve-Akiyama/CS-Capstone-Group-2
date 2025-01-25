@@ -29,6 +29,15 @@ import os # Allows you to access environment variables
 load_dotenv() # Loads environment variables
 api_key = os.getenv("OPENAI_API_KEY") # Retrieves the API key from the .env file
 
+# Retrieve the environment variable for the frontend and backend URLs
+environment = os.getenv("ENVIRONMENT", "local")
+if environment == "production":
+    frontend_url = os.getenv("FRONTEND_URL_PRODUCTION")
+    backend_url = os.getenv("BACKEND_URL_PRODUCTION")
+else:
+    frontend_url = os.getenv("FRONTEND_URL_LOCAL")
+    backend_url = os.getenv("BACKEND_URL_LOCAL")
+
 app = FastAPI()
 my_tutor = TutorAI(api_key=api_key, temp=0.3)
 
@@ -42,7 +51,7 @@ class Query(BaseModel):
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://52.15.75.24:3000"],  # Adjust to your frontend URL
+    allow_origins=[frontend_url],  # Adjust to your frontend URL
     allow_credentials=True,
     allow_methods=["*"],  # Allow all methods (GET, POST, OPTIONS, etc.)
     allow_headers=["*"],  # Allow all headers
