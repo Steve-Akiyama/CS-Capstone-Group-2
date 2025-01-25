@@ -5,7 +5,7 @@ import './App.css'; // Import the CSS file
 
 const BASE_URL = window.location.origin.includes('localhost')
     ? 'http://localhost:8000'  // If running locally, assume backend is on localhost:8000
-    : 'http://52.15.75.24:8000/';  // Replace with your production backend URLconsole.log("API Base URL:", BASE_URL);
+    : 'http://52.15.75.24:8000';  // Replace with your production backend URLconsole.log("API Base URL:", BASE_URL);
 
 const App = () => {
     // BACKEND
