@@ -42,7 +42,7 @@ class Query(BaseModel):
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://52.15.75.24:3000/"],  # Adjust to your frontend URL
+    allow_origins=["http://52.15.75.24:3000"],  # Adjust to your frontend URL
     allow_credentials=True,
     allow_methods=["*"],  # Allow all methods (GET, POST, OPTIONS, etc.)
     allow_headers=["*"],  # Allow all headers
