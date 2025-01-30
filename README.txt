@@ -59,6 +59,22 @@ Launching the Backend
     nohup uvicorn main:app --reload --host 0.0.0.0 --port 8000 &
     ```
 
+3. **On the EC2 server with tmux (Persistent hosting):**
+    - Create a new tmux session (Or reconnect, if one already exists):
+    ```
+    tmux new -s <session_name>
+    ```
+    - Navigate to your `/backend` directory.
+    - Run the following command to start the backend server:
+    ```
+    uvicorn main:app --reload --host 0.0.0.0 --port 8000
+    ```
+    - You can detach from the session (And create a new one for frontend) with Ctrl + B, then D.
+    - You can retach to the session to close the backend with:
+    ```
+    tmux attach -t <session_name>
+    ```
+
 ------------------------------------------------------------
 Launching the Frontend
 ------------------------------------------------------------
@@ -84,6 +100,22 @@ Launching the Frontend
     - Start the frontend server using `nohup` to keep it running in the background:
     ```
     nohup npm run dev &
+    ```
+
+3. **On the EC2 server with tmux (Persistent hosting):**
+    - Create a new tmux session (Or reconnect, if one already exists):
+    ```
+    tmux new -s <session_name>
+    ```
+    - Navigate to your `/backend` directory.
+    - Run the following command to start the backend server:
+    ```
+    npm run dev
+    ```
+    - You can detach from the session with Ctrl + B, then D.
+    - You can retach to the session to close the backend with:
+    ```
+    tmux attach -t <session_name>
     ```
 
 ------------------------------------------------------------
