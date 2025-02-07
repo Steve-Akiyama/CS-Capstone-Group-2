@@ -14,3 +14,6 @@
 ### Removed
 - Removed shortanswer_complete_terminal, as it was depreciated and no longer functional.
 - Removed vdatabase, as it wasn't implemented. 
+
+### Next Steps (Current branch only)
+- Fix an issue where accessing the program through a domain name listing causes the connection between backend and frontend to be severed.
