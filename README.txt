@@ -20,6 +20,28 @@ Existing study tools and platforms do not offer the same level of personalized f
 We will collect data by testing the system with psychology students, tracking their progress and improvements in comprehension through pre- and post-assessments. Our expected result is that students using the system will demonstrate a higher retention rate of textbook material and improved test scores compared to traditional study methods.
 
 ------------------------------------------------------------
+GENERAL REQUIREMENTS
+------------------------------------------------------------
+
+- OpenAI API Key
+- QDrant Cloud API Key
+- Existing QDrant Cloud Cluster (Correctly formatted, see below)
+- .env configured file with necessary data (See below)
+
+------------------------------------------------------------
+Qdrant Cloud Formatting
+------------------------------------------------------------
+
+To run this program, you'll need a QDrant Cloud database. 
+Each point in the database needs:
+title: <str>
+chapter: <str>
+text: <str>
+
+Futuristically, there will be a program to automatically interpret 
+a textbook in this program.
+
+------------------------------------------------------------
 Important: .env configuration
 ------------------------------------------------------------
 
@@ -31,10 +53,14 @@ OPENAI_API_KEY="<Your Key Here!>"
 ENVIRONMENT=local  # Change to 'production' when deploying to EC2
 
 # URLs based on environment. Change PRODUCTION urls to match your EC2 server IP!
-FRONTEND_URL_LOCAL=http://localhost:3000
-FRONTEND_URL_PRODUCTION=http://52.15.75.24:3000
-BACKEND_URL_LOCAL=http://localhost:8000
-BACKEND_URL_PRODUCTION=http://52.15.75.24:8000
+FRONTEND_URL_LOCAL      =http://localhost:3000
+FRONTEND_URL_PRODUCTION =http://<EC2.server.IP.address>:3000
+BACKEND_URL_LOCAL       =http://localhost:8000
+BACKEND_URL_PRODUCTION  =http://<EC2.server.IP.address>:8000
+
+# QDrant Access
+QDRANT_API_KEY="<Your Key Here!>"
+QDRANT_URL="<Your QDrant Cloud Cluster URL Here!>"
 
 ------------------------------------------------------------
 Launching the Backend

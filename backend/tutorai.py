@@ -34,9 +34,9 @@ class TutorAI:
         Sets a default option for text being inputted.
     """
     
-    def __init__(self, api_key="", temp=0.5, rec_accuracy=0.85, req_accuracy=0.6, system_message="You are a kind and helpful tutor teaching a student."):
+    def __init__(self, openai_api_key="", temp=0.5, rec_accuracy=0.85, req_accuracy=0.6, system_message="You are a kind and helpful tutor teaching a student."):
         # Initialize OpenAI's model with desired temperature, which defines the randomness of the output. Higher = more random!
-        self.__llm = OpenAI(temperature=temp, api_key=api_key)
+        self.__llm = OpenAI(temperature=temp, api_key=openai_api_key)
 
         # Initalizes some base variables
         self.rec_accuracy = rec_accuracy
@@ -255,35 +255,3 @@ class TutorAI:
     # Updates the document text
     def set_document_text(self, new_text):
         self.document_text = new_text
-
-    ####################################################################
-    # Old/Decomissioned functions
-    ####################################################################
-
-    # Should not be used
-    def shortanswer_complete_terminal(self, text, count):
-        questions = self.shortanswer_questions(count, text)
-        total_score = 0
-        for question in questions:
-            score = "N/A"
-
-            answer = input("\n\nPlease answer the following question:\n" + question + "\n: ")
-            evaluation = self.shortanswer_evaluate(question, answer, text)
-            print(evaluation)
-
-            score = " ".join(evaluation.split("/"))
-            for word in score.split():
-                if word.isdigit():
-                    score = word
-                    break
-            
-            print("Your score was: " + score)
-            total_score += int(score)
-
-        print("Your total score was " + str(total_score) + "/" + str(count * 10) + ".")
-        if ((self.req_accuracy * 10 * count) > (total_score)):
-            print("You failed the segment questions.")
-        elif ((self.rec_accuracy * 10 * count) > (total_score)):
-            print("You passed the segement questions, but it's reccommended that you review some more.")
-        else:
-            print("Congrats! You passed this segment's questions.")

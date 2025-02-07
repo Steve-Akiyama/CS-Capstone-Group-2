@@ -19,31 +19,20 @@ Future Updates:
 """
 
 from tutorai import TutorAI
+from qdrant import QdrantConnect
 
 from dotenv import load_dotenv # Allows you to load environment variables from a .env file
 import os # Allows you to access environment variables
 
 load_dotenv() # Loads environment variables
-
-# Make sure you have a .env file with an API key!
-api_key = os.getenv("OPENAI_API_KEY") # Retrieves the API key from the .env file
+openai_api_key = os.getenv("OPENAI_API_KEY") # Retrieves the API key from the .env file
+qdrant_api_key = os.getenv("QDRANT_API_KEY") # Retrieves the API key from the .env file
+qdrant_url = os.getenv("QDRANT_URL") # Retrieves the API key from the .env file
 
 
 # Create an instance of the tutor
-my_tutor = TutorAI(api_key=api_key, temp=0.5)
+my_tutor = TutorAI(openai_api_key=openai_api_key, temp=0.5)
+my_db = QdrantConnect(host=qdrant_url, api_key=qdrant_api_key)
 
-# Summarize the text
-# summary = my_tutor.summarize_text(my_tutor.document_text)
-# print("Summary:", summary)
-
-# my_tutor.shortanswer_complete_terminal(my_tutor.document_text, 5)
-question_set = my_tutor.multiplechoice_questions(my_tutor.document_text, 3)
-
-print(question_set)
-
-for question in question_set:
-    print(question[:-1])
-    if my_tutor.multiplechoice_evaluate(question, input()):
-        print("Congrats! You got it correct.")
-    else:
-        print("Sorry, wrong answer! The correct answer was " + question[-1])
+print(my_db.get_subchapter_from_title("Psychology2e", "1.1 What Is Psychology?"))
+print(my_db.get_chapter_from_chapter("Psychology2e", "Chapter 1 Introduction to Psychology"))
