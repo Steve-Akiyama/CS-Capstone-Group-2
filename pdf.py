@@ -60,7 +60,7 @@ def search_section(section_title):
     results = {title: content for title, content in chunks.items() if section_title.lower() in title.lower()}
     if results:
         for title, content in results.items():
-            print(f"\n📖 Section: {title}\n")
+            print(f"\n Section: {title}\n")
             print(content['text'][:1000])  # Print first 1000 characters to avoid overwhelming output
             print("\n--- [Truncated] ---\n")
             if content['subsections']:
