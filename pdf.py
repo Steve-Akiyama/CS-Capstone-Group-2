@@ -68,7 +68,7 @@ def search_section(section_title):
                 for sub_title in content['subsections']:
                     print(f"  - {sub_title}")
     else:
-        print("⚠️ Section not found. Try another title.")
+        print(" Section not found. Try another title.")
 
 # Example usage:
 while True:
@@ -77,4 +77,4 @@ while True:
         break
     search_section(query)
 
-print("\n✅ Extraction Complete: All sections saved in 'textbook_chunks' folder.")
+print("\n Extraction Complete: All sections saved in 'textbook_chunks' folder.")
