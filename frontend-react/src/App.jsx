@@ -8,6 +8,7 @@ const BASE_URL = window.location.origin.includes('localhost')
 
 const App = () => {
     const dataFetched = useRef(false);
+    const chatContainerRef = useRef(null); // Reference for the chat container
     const [answer, setAnswer] = useState('');
     const [questions, setQuestions] = useState([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -16,6 +17,8 @@ const App = () => {
     const [document, setDocument] = useState('');
     const [score, setScore] = useState(0);
     const [submitDisabled, setSubmitDisabled] = useState(false);
+    const [currentModule, setCurrentModule] = useState('6.1');
+    const [nextSectionClicked, setNextSectionClicked] = useState(false); // Track button click state
 
     // Fetch document once when the component mounts
     useEffect(() => {
@@ -34,7 +37,10 @@ const App = () => {
     useEffect(() => {
         const fetchSummaryAndQuestions = async () => {
             try {
-                const res = await axios.get(`${BASE_URL}/generate-summary-and-questions`);
+                const res = await axios.get(
+                    `${BASE_URL}/generate-summary-and-questions`, 
+                    { params: { module: currentModule } }
+                );
                 if (!dataFetched.current) {
                     setSummary(res.data.summary);
                     setQuestions(res.data.questions);
@@ -46,7 +52,41 @@ const App = () => {
         };
         fetchSummaryAndQuestions();
     }, []);
-    
+
+    // Function to update summary and append new questions
+    const updateSummaryAndQuestions = async () => {
+        if (nextSectionClicked) return; // Prevent further clicks if already clicked
+        
+        try {
+            setNextSectionClicked(true); // Disable button when clicked
+            
+            // Increment the module number
+            setCurrentModule(incrementModule(currentModule));
+
+            const res = await axios.get(
+                `${BASE_URL}/generate-summary-and-questions`,
+                {params: { module: currentModule } }
+            );
+            // Update the summary
+            setSummary(res.data.summary);
+            // Append new questions to existing questions
+            setQuestions((prevQuestions) => [...prevQuestions, ...res.data.questions]);
+        } catch (error) {
+            console.error("Error updating summary and questions:", error);
+        }
+    };
+
+    // Function to increment the module (e.g., 1.1 -> 1.2, 2.4 -> 2.5)
+    const incrementModule = (module) => {
+        const [chapter, section] = module.split('.').map(Number);
+        
+        // Increment the section number
+        const updatedSection = section + 1;
+        
+        // Return the updated module as a string in the format "chapter.section"
+        return `${chapter}.${updatedSection}`;
+    };
+
     // Function to handle user submissions
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -74,18 +114,24 @@ const App = () => {
         }
     };
 
+    // Auto-scroll to the bottom of the chat container whenever the questions or answers change
+    useEffect(() => {
+        if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }
+    }, [answers, currentQuestionIndex]);
+
     return (
         <div className="app-container">
             <h1 className="app-title">TutorAI: Textbook Learning Assistant</h1>
-            <div className="textbook-container">
-                <h2>Textbook Content:</h2>
-                <p className="textbook-content">{document}</p>
-            </div>
             <div className="summary-container">
-                <h2>Textbook Summary:</h2>
+                <h2>Section {currentModule} Summary:</h2>
                 <p className="summary-content">{summary}</p>
             </div>
-            <div className="chat-container">
+            <div 
+                className="chat-container" 
+                ref={chatContainerRef}  // Attach the ref to the chat container
+            >
                 <h3>Questions and Responses:</h3>
                 {questions.slice(0, currentQuestionIndex + 1).map((q, index) => (
                     <div key={index} className="chat-bubble-container">
@@ -113,17 +159,28 @@ const App = () => {
                     <p>{score}/{currentQuestionIndex * 10}</p>
                 </div>
             )}
-            <form className="input-form" onSubmit={handleSubmit}>
-                <input
-                    type="text"
-                    value={answer}
-                    onChange={(e) => setAnswer(e.target.value)}
-                    placeholder="Your Answer"
-                />
-                <button type="submit" disabled={submitDisabled}>Submit</button>
-            </form>
+            {currentQuestionIndex < questions.length && (
+                <form className="input-form" onSubmit={handleSubmit}>
+                    <input
+                        type="text"
+                        value={answer}
+                        onChange={(e) => setAnswer(e.target.value)}
+                        placeholder="Your Answer"
+                    />
+                    <button type="submit" disabled={submitDisabled}>Submit</button>
+                </form>
+            )}
             {currentQuestionIndex >= questions.length && (
-                <p className="completion-message">All questions answered!</p>
+                <div className="completion-container">
+                    <p className="completion-message">All questions answered in section {currentModule}!</p>
+                    <button 
+                        className="next-section-button" 
+                        onClick={updateSummaryAndQuestions} 
+                        disabled={nextSectionClicked} // Disable the button after it's clicked
+                    >
+                        Move to section {incrementModule(currentModule)}
+                    </button>
+                </div>
             )}
         </div>
     );

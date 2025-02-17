@@ -65,7 +65,7 @@ app.add_middleware(
 ##############################
 # Setup Document (Temporary) #
 ##############################
-active_document = my_db.get_subchapter_from_title("Psychology2e", "1.1 What Is Psychology?")
+active_document = my_db.get_subchapter_from_section("Psychology2e", "6.1")
 
 
 ##############################
@@ -85,9 +85,15 @@ def read_root():
     return {"message": "Hello, World!"}
 
 @app.get("/generate-summary-and-questions")
-async def generate_summary_and_questions():
+async def generate_summary_and_questions(section: str = "6.1"):
+    # Update the currently active document
+    active_document = my_db.get_subchapter_from_section("Psychology2e", section)
+    
+    # Retrieve summary and questions
     summary = my_tutor.summarize_text(text=active_document)
     questions = my_tutor.shortanswer_questions(5, text=active_document)
+
+    # Return the summary and questions
     return{"summary": summary, "questions": questions}
 
 @app.get("/retrieve-document")

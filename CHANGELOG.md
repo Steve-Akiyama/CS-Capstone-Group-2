@@ -17,3 +17,21 @@
 
 ### Next Steps (Current branch only)
 - Fix an issue where accessing the program through a domain name listing causes the connection between backend and frontend to be severed.
+
+## [Unreleased] - 2/16/2025 - Steven Akiyama
+### Added
+- Added the ability for users to generate and append new questions from the next subsection of the textbook.
+- Added a button to do this, that displays once all submissions have been sent.
+
+### Changed
+- Modified the front-end to only show submission button & window when not all questions are answered.
+- Modified the chatlogs to contain a scrolly, so the summary is always visible.
+
+### Fixed
+- Fixed an issue where accessing the program through a domain name caused the connection to fail. (NOT LIVE!)
+
+### Removed
+- Removed textbook content visualization, as it wasn't user-friendly post RAG implementation.
+
+### Next Steps (Current branch only)
+- Possibly add a PDF viewer?

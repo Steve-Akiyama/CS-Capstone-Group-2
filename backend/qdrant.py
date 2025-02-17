@@ -10,6 +10,21 @@ class QdrantConnect:
             api_key=api_key,
         )
 
+    def get_subchapter_from_section(self, collection_name: str, section: str):
+        records, next_token = self.qdrant_client.scroll(
+            collection_name=collection_name,
+            scroll_filter=models.Filter(
+                must=[
+                    models.FieldCondition(
+                        key="section",
+                        match=models.MatchValue(value=section),
+                    ),
+                ]
+            ),
+        )
+        text = records[0].payload.get("text")
+        return text
+
     def get_subchapter_from_title(self, collection_name: str, title: str):
         records, next_token = self.qdrant_client.scroll(
             collection_name=collection_name,
