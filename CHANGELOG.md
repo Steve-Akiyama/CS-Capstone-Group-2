@@ -35,3 +35,7 @@
 
 ### Next Steps (Current branch only)
 - Possibly add a PDF viewer?
+
+### Known Issues 
+- New questions is oblivious to chapters (Will continue past the end of a chapter, i.e. if chapter 6 ends at 6.5, the program will continue to a non-existant 6.6, 6.7 etc.)
+- Not a full issue, but currently has no memory between page loads. This is apparent with multiple subchapter usage.
