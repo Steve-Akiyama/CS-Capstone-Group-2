@@ -5,6 +5,9 @@ body {
   margin: 0;
   padding: 0;
   color: #e0e0e0;
+  height: 100vh;  /* Ensure full viewport height */
+  display: flex;
+  flex-direction: column;
 }
 
 .app-container {
@@ -14,8 +17,12 @@ body {
   background: #2a2a3d;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  height: calc(90vh);  /* Adjust to fit inside the viewport, with padding */
 }
 
+/* Title */
 .app-title {
   text-align: center;
   color: #e0e0e0;
@@ -48,8 +55,17 @@ body {
 /* Chat Section */
 .chat-container {
   margin: 20px 0;
+  flex-grow: 1; /* Makes the chat section take the remaining space */
+  overflow-y: auto;  /* Scrollable chat area */
+  padding: 15px;
+  background: #333446;  /* Matches the background color of other sections */
+  border: 1px solid #444;  /* Matches the border of other sections */
+  border-radius: 8px;  /* Matches the rounded corners */
+  color: #e0e0e0;  /* Makes sure text color is readable */
+  max-height: calc(100vh - 300px); /* Adjusts height to fit within the viewport */
 }
 
+/* Chat Bubbles */
 .chat-bubble-container {
   margin: 10px 0;
   display: flex;
@@ -101,6 +117,7 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-top: auto;  /* Pushes the input form to the bottom of the container */
 }
 
 .input-form input {
@@ -125,9 +142,29 @@ body {
   background: #0056b3;
 }
 
+/* Next Section Button */
+.next-section-button {
+  padding: 10px 20px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.next-section-button:hover {
+  background: #0056b3; /* Optional, for hover effect */
+}
+
+.completion-container {
+  display: flex;
+  justify-content: space-between;  /* Align items to the left and right */
+  align-items: center;  /* Vertically center the items */
+  gap: 10px;  /* Optional: Adds space between the text and the button */
+}
+
 /* Completion Message */
 .completion-message {
-  text-align: center;
   font-size: 16px;
   color: #52c41a;
 }
