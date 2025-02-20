@@ -1,10 +1,11 @@
+// Imports react and necessary libraries
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import './App.css'; // Import the CSS file
 
 const BASE_URL = window.location.origin.includes('localhost')
     ? 'http://localhost:8000'  // If running locally, assume backend is on localhost:8000
-    : 'http://52.15.75.24:8000';  // Replace with your production backend URL
+    : 'http://52.15.75.24:8000';  // Replace with your production backend URLconsole.log("API Base URL:", BASE_URL);
 
 const App = () => {
     // BACKEND
@@ -46,44 +47,29 @@ const App = () => {
         }
     };
     
-    const dataFetched = useRef(false);
-    const chatContainerRef = useRef(null); // Reference for the chat container
-    const [answer, setAnswer] = useState('');
-    const [questions, setQuestions] = useState([]);
-    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const [answers, setAnswers] = useState([]);
-    const [summary, setSummary] = useState('');
-    const [document, setDocument] = useState('');
-    const [score, setScore] = useState(0);
-    const [submitDisabled, setSubmitDisabled] = useState(false);
-    const [currentModule, setCurrentModule] = useState('6.1');
-    const [nextSectionClicked, setNextSectionClicked] = useState(false); // Track button click state
 
-    // Fetch document once when the component mounts
     useEffect(() => {
         const fetchDocument = async () => {
             try {
                 const res = await axios.get(`${BASE_URL}/retrieve-document`);
-                setDocument(res.data.document);
+                setDocument(res.data.document)
             } catch (error) {
-                console.error("Error fetching document:", error.response || error);
+                console.error("Error fetching document:", error.response || error)
             }
         };
         fetchDocument();
-    }, []); // Empty dependency array ensures this runs only once when the component mounts
+    });
 
     // Fetch summary and questions on page load
     useEffect(() => {
         const fetchSummaryAndQuestions = async () => {
             try {
-                const res = await axios.get(
-                    `${BASE_URL}/generate-summary-and-questions`, 
-                    { params: { module: currentModule } }
-                );
-                if (!dataFetched.current) {
+                const res = await axios.get(`${BASE_URL}/generate-summary-and-questions`);
+                if (!dataFetched.current) { // Check to make sure summary and questions are blank
                     setSummary(res.data.summary);
-                    setQuestions(res.data.questions);
-                    dataFetched.current = true;
+                    // setQuestions(res.data.questions);
+                    // setMcq(res.data.mcq);
+                    dataFetched.current = true; // Mark data as fetched
                 }
             } catch (error) {
                 console.error("Error fetching summary and questions:", error);
@@ -92,48 +78,43 @@ const App = () => {
         fetchSummaryAndQuestions();
     }, []);
 
-    // Function to update summary and append new questions
-    const updateSummaryAndQuestions = async () => {
-        if (nextSectionClicked) return; // Prevent further clicks if already clicked
-        
+    //NEW CODE:
+    const fetchQuestions = async () => {
         try {
-            setNextSectionClicked(true); // Disable button when clicked
-            
-            // Increment the module number
-            setCurrentModule(incrementModule(currentModule));
+            const res = await axios.get(`${BASE_URL}/generate-questions`);
+            let questionSet = [];
+            if (selectedQuizTypes.includes("short answer"))
+                questionSet = questionSet.concat(res.data.questions);
+            if (selectedQuizTypes.includes("mcq"))
+                questionSet = questionSet.concat(res.data.mcq);
+            if (selectedQuizTypes.includes("true/false"))
+                questionSet = questionSet.concat(res.data.tf);
 
-            const res = await axios.get(
-                `${BASE_URL}/generate-summary-and-questions`,
-                {params: { module: currentModule } }
-            );
-            // Update the summary
-            setSummary(res.data.summary);
-            // Append new questions to existing questions
-            setQuestions((prevQuestions) => [...prevQuestions, ...res.data.questions]);
+            questionSet.sort( () => .5 - Math.random() );
 
-            setNextSectionClicked(false)
+            for (let i = 0; i < questionSet.length; i++) {
+                if (Array.isArray(questionSet[i])){
+                    questionSet[i] = questionSet[i].filter(x => x)
+                }
+            }
+
+            setQuestions(questionSet);
+
+            console.log("SELECTED TYPES:");
+            console.log(selectedQuizTypes);
+            console.log("Question Set:");
+            console.log(questionSet);
+
         } catch (error) {
-            console.error("Error updating summary and questions:", error);
+            console.error("Error fetching summary and questions:", error);
         }
     };
-
-    // Function to increment the module (e.g., 1.1 -> 1.2, 2.4 -> 2.5)
-    const incrementModule = (module) => {
-        const [chapter, section] = module.split('.').map(Number);
-        
-        // Increment the section number
-        const updatedSection = section + 1;
-        
-        // Return the updated module as a string in the format "chapter.section"
-        return `${chapter}.${updatedSection}`;
-    };
-
+    
     // Function to handle user submissions
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        setSubmitDisabled(true);
-
+        e.preventDefault(); // Prevent page reload on submission
         try {
+            // Get the current question's answer from the input field (the user's response)
             const userAnswer = answer;
             
             let question_string = questions[currentQuestionIndex];
@@ -142,53 +123,142 @@ const App = () => {
                 console.log(question_string);
             }
 
-        try {
-            const userAnswer = answer;
+            // Make a POST request to the backend with the question and user's answer
             const res = await axios.post(`${BASE_URL}/query`, { 
-                question: questions[currentQuestionIndex], 
-                user_answer: userAnswer 
+                question: question_string, 
+                user_answer: userAnswer
             });
-
+        
+            // Store the user's response to the current question in the answers state
             setAnswers([
                 ...answers,
                 { question: questions[currentQuestionIndex], user_answer: userAnswer, response: res.data.response, score: res.data.score }
             ]);
-
-            setAnswer('');
-            setScore(Number(res.data.score) + Number(score));
-            setCurrentQuestionIndex(currentQuestionIndex + 1);
+    
+            setAnswer(''); // Clear the input field for the next question
+            setScore(Number(res.data.score) + Number(score))
+            setCurrentQuestionIndex(currentQuestionIndex + 1); // Move to the next question
         } catch (error) {
-            console.error("Error querying LLM:", error);
-        } finally {
-            setSubmitDisabled(false);
+            console.error("Error querying LLM:", error); // Log any errors
         }
     };
-
-    // Auto-scroll to the bottom of the chat container whenever the questions or answers change
-    useEffect(() => {
-        if (chatContainerRef.current) {
-            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-        }
-    }, [answers, currentQuestionIndex]);
+    
 
     return (
         <div className="app-container">
             <h1 className="app-title">TutorAI: Textbook Learning Assistant</h1>
+
+            {/* NEW CODE: Settings Menu */}
+            <div className="settings-container">
+                <div className="section-settings">
+                    <h3>Select Textbook Sections</h3>
+                    <label>
+                        <input 
+                            type="checkbox" 
+                            value="ch 6.1" 
+                            checked={selectedSections.includes("ch 6.1")} 
+                            onChange={handleSectionChange} 
+                        />
+                        ch 6.1 What Is Learning?
+                    </label>
+                    <br />
+                    <label>
+                        <input 
+                            type="checkbox" 
+                            value="ch 6.2" 
+                            checked={selectedSections.includes("ch 6.2")} 
+                            onChange={handleSectionChange} 
+                        />
+                        ch 6.2 Classical Conditioning
+                    </label>
+                    <br />
+                    <label>
+                        <input 
+                            type="checkbox" 
+                            value="ch 6.3" 
+                            checked={selectedSections.includes("ch 6.3")} 
+                            onChange={handleSectionChange} 
+                        />
+                        ch 6.3 Operant Conditioning
+                    </label>
+                    <br />
+                    <label>
+                        <input 
+                            type="checkbox" 
+                            value="ch 6.4" 
+                            checked={selectedSections.includes("ch 6.4")} 
+                            onChange={handleSectionChange} 
+                        />
+                        ch 6.4 Observational Learning (Modeling)
+                    </label>
+                </div>
+                <div className="quiz-settings">
+                    <h3>Select Quiz Types</h3>
+                    <label>
+                        <input 
+                            type="checkbox" 
+                            value="mcq" 
+                            checked={selectedQuizTypes.includes("mcq")} 
+                            onChange={handleQuizTypeChange} 
+                        />
+                        MCQ
+                    </label>
+                    <br />
+                    <label>
+                        <input 
+                            type="checkbox" 
+                            value="true/false" 
+                            checked={selectedQuizTypes.includes("true/false")} 
+                            onChange={handleQuizTypeChange} 
+                        />
+                        True/False
+                    </label>
+                    <br />
+                    <label>
+                        <input 
+                            type="checkbox" 
+                            value="short answer" 
+                            checked={selectedQuizTypes.includes("short answer")} 
+                            onChange={handleQuizTypeChange} 
+                        />
+                        Short Answer
+                    </label>
+                </div>
+            </div>
+
+            <button onClick={fetchQuestions} className="load-questions-button">Load Questions</button>
+            {/* End of NEW CODE: Settings Menu */}
+
+            {/* Textbook Content Section */}
+            <div className="textbook-container">
+                <h2>Textbook Content:</h2>
+                <p className="textbook-content">{document}</p>
+            </div>
+
+            {/* Summary Section */}
             <div className="summary-container">
-                <h2>Section {currentModule} Summary:</h2>
+                <h2>Textbook Summary:</h2>
                 <p className="summary-content">{summary}</p>
             </div>
-            
-            <div 
-                className="chat-container" 
-                ref={chatContainerRef}  // Attach the ref to the chat container
-            >
+
+            {/* Chat Section */}
+            <div className="chat-container">
                 <h3>Questions and Responses:</h3>
                 {questions.slice(0, currentQuestionIndex + 1).map((q, index) => (
                     <div key={index} className="chat-bubble-container">
                         <div className="chat-bubble user-bubble">
-                            <strong>Question {index + 1}:</strong> {q}
+                            <strong>Question {index + 1}:</strong> {Array.isArray(q) ? q[0] : q}
+
+                            {/* Render answer choices if the question is an array */}
+                            {Array.isArray(q) && (
+                                <div className="chat-bubble options">
+                                    {q.slice(1, q.length - 1).map((option, optIndex) => (
+                                        <div key={optIndex} className="chat-bubble option">{option}</div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
+
                         {answers[index] && (
                             <div className="chat-bubble user-answer">
                                 <strong>Your Answer:</strong> {answers[index].user_answer}
@@ -204,34 +274,30 @@ const App = () => {
                     </div>
                 ))}
             </div>
-            {currentQuestionIndex > 0 && (
-                <div className="current-question">
-                    <h3>Current Score: {score}/{currentQuestionIndex * 10}</h3>
-                </div>
-            )}
-            {currentQuestionIndex < questions.length && (
-                <form className="input-form" onSubmit={handleSubmit}>
-                    <input
-                        type="text"
-                        value={answer}
-                        onChange={(e) => setAnswer(e.target.value)}
-                        placeholder="Your Answer"
-                    />
-                    <button type="submit" disabled={submitDisabled}>Submit</button>
-                </form>
-            )}
-            {currentQuestionIndex >= questions.length && currentQuestionIndex > 1 && (
-                <div className="completion-container">
-                    <p className="completion-message">All questions answered in section {currentModule}!</p>
-                    {currentModule != "6.4" && (
-                        <button 
-                        className="next-section-button" 
-                        onClick={updateSummaryAndQuestions} 
-                        disabled={nextSectionClicked} // Disable the button after it's clicked
-                    >
-                        Move to section {incrementModule(currentModule)}
-                    </button>)}
-                </div>
+
+            {/* Current Question Section */}
+
+            {currentQuestionIndex > 0 &&
+            <div className="current-question">
+                <h3>Current Score:</h3>
+                <p>{score}/{currentQuestionIndex * 10}</p>
+            </div>
+            }
+
+            {/* Input Form Section */}
+            <form className="input-form" onSubmit={handleSubmit}>
+                <input
+                    type="text"
+                    value={answer}
+                    onChange={(e) => setAnswer(e.target.value)}
+                    placeholder="Your Answer"
+                />
+                <button type="submit">Submit</button>
+            </form>
+
+            {/* Completion Message */}
+            {currentQuestionIndex >= questions.length && (
+                <p className="completion-message">All questions answered!</p>
             )}
         </div>
     );

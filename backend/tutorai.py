@@ -34,9 +34,9 @@ class TutorAI:
         Sets a default option for text being inputted.
     """
     
-    def __init__(self, openai_api_key="", temp=0.5, rec_accuracy=0.85, req_accuracy=0.6, system_message="You are a kind and helpful tutor teaching a student."):
+    def __init__(self, api_key="", temp=0.5, rec_accuracy=0.85, req_accuracy=0.6, system_message="You are a kind and helpful tutor teaching a student."):
         # Initialize OpenAI's model with desired temperature, which defines the randomness of the output. Higher = more random!
-        self.__llm = OpenAI(temperature=temp, api_key=openai_api_key)
+        self.__llm = OpenAI(temperature=temp, api_key=api_key)
 
         # Initalizes some base variables
         self.rec_accuracy = rec_accuracy
@@ -97,14 +97,29 @@ class TutorAI:
         self.shortanswer_question_chain = RunnableSequence(shortanswer_question_prompt | self.__llm)
 
         # Multiple-Choice Questions
-        multiplechoice_question_template = self.system_message + " Create {count} multiple-choice questions about the text. The format should be as follows: \"Question 1: <Insert Question>\"\"A) <Answer A>\"\"B) <Answer B>\"\"C) <Answer C>\"\"D) <Answer D>\"\"Correct Answer: <Letter of correct answer> Text:\n\n{text}\n\n"
+        multiplechoice_question_template = self.system_message + " Create {count} multiple-choice questions about the text. The format should be as follows: \"Question 1: <Question>\"\"A) <Answer A>\"\"B) <Answer B>\"\"C) <Answer C>\"\"D) <Answer D>\"\"Correct Answer: <Letter of correct answer> Text:\n\n{text}\n\n"
         multiplechoice_question_prompt = PromptTemplate(input_variables=["text"], template=multiplechoice_question_template)
         self.multiplechoice_question_chain = RunnableSequence(multiplechoice_question_prompt | self.__llm)
+
+        # True/False Questions
+        truefalse_question_template = self.system_message + " Create {count} true/false questions about the text.  The format should be as follows: \"Question 1: <Question>\"\"T: True\"\"F: False\"\"Correct Answer: <true or false> Text: \n\n{text}\n\n"
+        truefalse_question_prompt = PromptTemplate(input_variables=["text"], template=truefalse_question_template)
+        self.truefalse_question_chain = RunnableSequence(truefalse_question_prompt | self.__llm)
 
         # Short-Answer Evaluation
         shortanswer_evaluation_template = self.system_message + " Use the following text:\n\n{text}\n\nTo evaluate the following question and answer. Please evaluate the answer based on the text with a score of 1-10 and an explanation for your score, quoting the text. Question:\n\n{question}\n\n Student's answer:\n\n{answer}\n\n The template should look like this: Score:\nEvaluation:"
         shortanswer_evaluation_prompt = PromptTemplate(input_variables=["text", "question", "answer"], template=shortanswer_evaluation_template)
         self.shortanswer_evaluation_chain = RunnableSequence(shortanswer_evaluation_prompt | self.__llm)
+
+        # MCQ Evaluation
+        multiplechoice_evaluation_template = self.system_message + " Use the following text:\n\n{text}\n\nTo explain why {correct_answer} is correct if applicable why {user_answer} is incorrect"
+        multiplechoice_evaluation_prompt = PromptTemplate(input_variables=["text", "question", "correct_answer", "user_answer"], template=multiplechoice_evaluation_template)
+        self.multiplechoice_evaluation_chain = RunnableSequence(multiplechoice_evaluation_prompt | self.__llm)
+
+        # TF Evaluation
+        truefalse_evaluation_template = self.system_message + " Use the following text:\n\n{text}\n\nTo explain why {correct_answer} is correct if applicable why {user_answer} is incorrect"
+        truefalse_evaluation_prompt = PromptTemplate(input_variables=["text", "question", "correct_answer", "user_answer"], template=truefalse_evaluation_template)
+        self.truefalse_evaluation_chain = RunnableSequence(truefalse_evaluation_prompt | self.__llm)
 
     def summarize_text(self, text=None):
         """
@@ -173,15 +188,40 @@ class TutorAI:
         question_set = [x for x in question_set if x != ''] # Clean the list
 
         # Create a regex string
-        pattern = r"A\) |B\) |C\) |D\) |Correct Answer: "
+        pattern = r"(?i)(question )?q?\d*: |A\) |B\) |C\) |D\) |Correct Answer: "
 
         # Split each question into question and answer segments
         for idx, question in enumerate(question_set):
             question_set[idx] = re.split(pattern, question.strip())
 
+        question_set = [x for x in question_set if len(x) == 13]
+
         return question_set
     
-    def multiplechoice_evaluate(self, question, answer):
+    def truefalse_questions(self, count, text=None):
+        # Set up the document text as default
+        if not text: text = self.document_text
+
+        # Invoke the question chain
+        questions = self.truefalse_question_chain.invoke({"count": count, "text": text})
+
+        # Split the return value by question
+        question_set = questions.replace('\n', '').split('Question')
+        question_set = [x for x in question_set if x != ''] # Clean the list
+
+        # Create a regex string
+        pattern = r"(?i)(question )?q?\d*: |T: |F: |Correct Answer: "
+
+        # Split each question into question and answer segments
+        for idx, question in enumerate(question_set):
+            question_set[idx] = re.split(pattern, question.strip())
+
+        question_set = [x for x in question_set if len(x) == 9]
+
+        return question_set
+
+    def multiplechoice_evaluate(self, question, answer, text=None):
+        if not text: text = self.document_text
 
         def letters_to_number(s):
             """
@@ -201,10 +241,38 @@ class TutorAI:
 
             return n
         
+        question = question.split("$%^")
+        
+        c_ans = question[letters_to_number(question[-1])]
+        u_ans = question[letters_to_number(answer)]
+        evaluation = self.multiplechoice_evaluation_chain.invoke({"text": text, "question": question[0], "correct_answer": c_ans, "user_answer": u_ans})
+        
         if answer == letters_to_number(question[-1]) or letters_to_number(answer) == letters_to_number(question[-1]):
-            return True
+            return evaluation, 10
         else:
-            return False
+            return evaluation, 0
+        
+    def truefalse_evaluate(self, question, answer, text=None):
+        if not text: text = self.document_text
+
+        def tf_to_num(ans):
+            ans = ans.lower()
+            if ans[0] == "t":
+                return 1
+            return 2
+
+
+        question = question.split("$%^")
+        c_ans = question[tf_to_num(question[-1])]
+        u_ans = question[tf_to_num(answer)]
+
+        evaluation = self.truefalse_evaluation_chain.invoke({"text": text, "question": question, "correct_answer": c_ans, "user_answer": u_ans})
+        if answer == tf_to_num(question[-1]) or tf_to_num(answer) == tf_to_num(question[-1]):
+            return evaluation, 10
+        else:
+            return evaluation, 0
+
+
     
     def shortanswer_evaluate(self, question, answer, text=None):
         """
@@ -255,3 +323,35 @@ class TutorAI:
     # Updates the document text
     def set_document_text(self, new_text):
         self.document_text = new_text
+
+    ####################################################################
+    # Old/Decomissioned functions
+    ####################################################################
+
+    # Should not be used
+    def shortanswer_complete_terminal(self, text, count):
+        questions = self.shortanswer_questions(count, text)
+        total_score = 0
+        for question in questions:
+            score = "N/A"
+
+            answer = input("\n\nPlease answer the following question:\n" + question + "\n: ")
+            evaluation = self.shortanswer_evaluate(question, answer, text)
+            print(evaluation)
+
+            score = " ".join(evaluation.split("/"))
+            for word in score.split():
+                if word.isdigit():
+                    score = word
+                    break
+            
+            print("Your score was: " + score)
+            total_score += int(score)
+
+        print("Your total score was " + str(total_score) + "/" + str(count * 10) + ".")
+        if ((self.req_accuracy * 10 * count) > (total_score)):
+            print("You failed the segment questions.")
+        elif ((self.rec_accuracy * 10 * count) > (total_score)):
+            print("You passed the segement questions, but it's reccommended that you review some more.")
+        else:
+            print("Congrats! You passed this segment's questions.")
