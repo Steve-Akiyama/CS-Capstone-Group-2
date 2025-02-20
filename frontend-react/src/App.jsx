@@ -71,6 +71,8 @@ const App = () => {
             setSummary(res.data.summary);
             // Append new questions to existing questions
             setQuestions((prevQuestions) => [...prevQuestions, ...res.data.questions]);
+
+            setNextSectionClicked(false)
         } catch (error) {
             console.error("Error updating summary and questions:", error);
         }
@@ -128,6 +130,7 @@ const App = () => {
                 <h2>Section {currentModule} Summary:</h2>
                 <p className="summary-content">{summary}</p>
             </div>
+            
             <div 
                 className="chat-container" 
                 ref={chatContainerRef}  // Attach the ref to the chat container
@@ -155,8 +158,7 @@ const App = () => {
             </div>
             {currentQuestionIndex > 0 && (
                 <div className="current-question">
-                    <h3>Current Score:</h3>
-                    <p>{score}/{currentQuestionIndex * 10}</p>
+                    <h3>Current Score: {score}/{currentQuestionIndex * 10}</h3>
                 </div>
             )}
             {currentQuestionIndex < questions.length && (
@@ -170,16 +172,17 @@ const App = () => {
                     <button type="submit" disabled={submitDisabled}>Submit</button>
                 </form>
             )}
-            {currentQuestionIndex >= questions.length && (
+            {currentQuestionIndex >= questions.length && currentQuestionIndex > 1 && (
                 <div className="completion-container">
                     <p className="completion-message">All questions answered in section {currentModule}!</p>
-                    <button 
+                    {currentModule != "6.4" && (
+                        <button 
                         className="next-section-button" 
                         onClick={updateSummaryAndQuestions} 
                         disabled={nextSectionClicked} // Disable the button after it's clicked
                     >
                         Move to section {incrementModule(currentModule)}
-                    </button>
+                    </button>)}
                 </div>
             )}
         </div>

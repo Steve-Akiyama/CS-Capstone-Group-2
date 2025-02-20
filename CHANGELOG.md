@@ -39,3 +39,15 @@
 ### Known Issues 
 - New questions is oblivious to chapters (Will continue past the end of a chapter, i.e. if chapter 6 ends at 6.5, the program will continue to a non-existant 6.6, 6.7 etc.)
 - Not a full issue, but currently has no memory between page loads. This is apparent with multiple subchapter usage.
+
+## [Unreleased] - 2/19/2025 - Steven Akiyama
+### Changed
+- Modified the UI to better accomadate the new chatlogging.
+
+### Fixed
+- Fixed an issue with moving through sections. Questions button is still oblivious to chapters, but is hidden at the end of chapter 6 (Hard-coded)
+
+### Next Steps (Current branch only)
+- Add options to switch between chapters
+- Make chapter stopping dynamic
+- Add loading notifications
