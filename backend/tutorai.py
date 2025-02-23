@@ -35,7 +35,7 @@ class TutorAI:
     
     def __init__(self, openai_api_key="", temp=0.5, rec_accuracy=0.85, req_accuracy=0.6, system_message="You are a kind and helpful tutor teaching me, a student."):
         # Initialize OpenAI's model with desired temperature, which defines the randomness of the output. Higher = more random!
-        self.__llm = OpenAI(temperature=temp, api_key=openai_api_key)
+        self.__llm = OpenAI(temperature=temp, api_key=openai_api_key, max_tokens=1096)
 
         # Initalizes some base variables
         self.rec_accuracy = rec_accuracy
@@ -109,7 +109,7 @@ class TutorAI:
         logger.debug(f"Sending summarization request: {text[:1000]}")
         
         # Retrieve the summary
-        summary = self.summarization_chain.invoke({"text": text[:3500]})
+        summary = self.summarization_chain.invoke({"text": text[:3000]})
         self.summary = summary # Caches the summary
         
         logger.debug(f"Summary recieved: {summary[:1000]}")

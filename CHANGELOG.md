@@ -1,4 +1,5 @@
 ## [Unreleased] - 2/7/2025 - Steven Akiyama
+## RAG Release
 ### Added
 - Program now uses retrieval-augmented generation (RAG) using a basic, static retriever.
 - Added the `CHANGELOG.md` file
@@ -19,6 +20,7 @@
 - Fix an issue where accessing the program through a domain name listing causes the connection between backend and frontend to be severed.
 
 ## [Unreleased] - 2/16/2025 - Steven Akiyama
+## Chapter Progression Release
 ### Added
 - Added the ability for users to generate and append new questions from the next subsection of the textbook.
 - Added a button to do this, that displays once all submissions have been sent.
@@ -41,6 +43,7 @@
 - Not a full issue, but currently has no memory between page loads. This is apparent with multiple subchapter usage.
 
 ## [v1.1.0] - 2/19/2025 - Steven Akiyama
+## Hotfix & QOL
 ### Changed
 - Modified the UI to better accomadate the new chatlogging.
 
@@ -55,7 +58,7 @@
 - Integrate chatlogging
 
 ## [v1.2.0] - 2/23/2025 - Steven Akiyama
-
+## Logging, UI & Refactoring
 ### Added
 - Introduced `logger.py` and updated other files to integrate logging. This enhances debugging and will facilitate future improvements. Logs are stored in `app.log`.
 
@@ -114,7 +117,31 @@
 - Summaries are occasionally cut off due to token count limitations.
 
 ## [v1.2.1] - 2/23/2025 - Steven Akiyama
-
+## Small Hotfix
 ### Changed
 **frontend-react\App.css**
 - Updated the textbook summary area to include a scrolly, and only take max 40% of page size.
+
+## [v1.2.2] - 2/23/2025 - Steven Akiyama
+## LocalStorage, UI, App.jsx Refactor
+### Added
+**frontend-react\App.jsx**
+- Added local storage for the tutor. No more constant reloads!
+- Added a button to reload the content. (More constant reloads?)
+- Added a loading message while content is loading.
+
+### Changed
+**frontend-react\App.jsx**
+- Refactored a lot of the code! Figured I might as well, since I was already implementing a lot here.
+
+**frontend-react\App.css**
+- Shrunk some padding/margins to allow for more content on screen.
+
+### Fixed
+**backend\tutorai.py**
+- Fixed an issue where LLM responses were cut off by token maxing. It's still somewhat possible, but *should* happen less frequently now.
+
+### Next Steps
+- Add options to switch between chapters.
+- Make chapter stopping dynamic.
+- Integrate MCQs.
