@@ -39,7 +39,7 @@ const App = () => {
             try {
                 const res = await axios.get(
                     `${BASE_URL}/generate-summary-and-questions`, 
-                    { params: { module: currentModule } }
+                    { params: { section: currentModule } }
                 );
                 if (!dataFetched.current) {
                     setSummary(res.data.summary);
@@ -59,14 +59,16 @@ const App = () => {
         
         try {
             setNextSectionClicked(true); // Disable button when clicked
-            
+
+            const res = await axios.get(`${BASE_URL}/generate-summary-and-questions`,
+                {params: { section: incrementModule(currentModule) } 
+            });
+
+            //console.log("Current module:", currentModule);
+
             // Increment the module number
             setCurrentModule(incrementModule(currentModule));
 
-            const res = await axios.get(
-                `${BASE_URL}/generate-summary-and-questions`,
-                {params: { module: currentModule } }
-            );
             // Update the summary
             setSummary(res.data.summary);
             // Append new questions to existing questions
@@ -98,7 +100,8 @@ const App = () => {
             const userAnswer = answer;
             const res = await axios.post(`${BASE_URL}/query`, { 
                 question: questions[currentQuestionIndex], 
-                user_answer: userAnswer 
+                user_answer: userAnswer,
+                summary: summary
             });
 
             setAnswers([
@@ -125,9 +128,8 @@ const App = () => {
 
     return (
         <div className="app-container">
-            <h1 className="app-title">TutorAI: Textbook Learning Assistant</h1>
             <div className="summary-container">
-                <h2>Section {currentModule} Summary:</h2>
+                <h3>Psychology2e Section {currentModule} Summary:</h3>
                 <p className="summary-content">{summary}</p>
             </div>
             
@@ -156,11 +158,6 @@ const App = () => {
                     </div>
                 ))}
             </div>
-            {currentQuestionIndex > 0 && (
-                <div className="current-question">
-                    <h3>Current Score: {score}/{currentQuestionIndex * 10}</h3>
-                </div>
-            )}
             {currentQuestionIndex < questions.length && (
                 <form className="input-form" onSubmit={handleSubmit}>
                     <input
@@ -169,12 +166,22 @@ const App = () => {
                         onChange={(e) => setAnswer(e.target.value)}
                         placeholder="Your Answer"
                     />
+                    {currentQuestionIndex > 0 && (
+                        <div className="current-question">
+                            <h4>Current Score: {score}/{currentQuestionIndex * 10}</h4>
+                        </div>
+                    )}
                     <button type="submit" disabled={submitDisabled}>Submit</button>
                 </form>
             )}
             {currentQuestionIndex >= questions.length && currentQuestionIndex > 1 && (
                 <div className="completion-container">
                     <p className="completion-message">All questions answered in section {currentModule}!</p>
+                    {currentQuestionIndex > 0 && (
+                        <div className="current-question">
+                            <h4>Current Score: {score}/{currentQuestionIndex * 10}</h4>
+                        </div>
+                    )}
                     {currentModule != "6.4" && (
                         <button 
                         className="next-section-button" 

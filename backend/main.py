@@ -27,7 +27,7 @@ from fastapi import Depends
 
 from dotenv import load_dotenv # Allows you to load environment variables from a .env file
 import os # Allows you to access environment variables
-
+from logger import logger
 
 ##############################
 # Environment Variables      #
@@ -63,12 +63,6 @@ app.add_middleware(
 )
 
 ##############################
-# Setup Document (Temporary) #
-##############################
-active_document = my_db.get_subchapter_from_section("Psychology2e", "6.1")
-
-
-##############################
 # Returns a new TutorAI      #
 ##############################
 def get_tutor():
@@ -76,8 +70,11 @@ def get_tutor():
     # tutor.set_document_text(my_db.get_subchapter_from_title("Psychology2e", "1.1 What Is Psychology?"))
     return tutor
 
-class Query(BaseModel):
-    question: str
+def qdrant_search(cluster, section):
+    # Response includes text, chapter, title
+    response = my_db.get_subchapter_from_section(cluster, section)
+    
+    return response
 
 # Define a basic route for testing
 @app.get("/")
@@ -85,35 +82,38 @@ def read_root():
     return {"message": "Hello, World!"}
 
 @app.get("/generate-summary-and-questions")
-async def generate_summary_and_questions(section: str = "6.1"):
-    # Update the currently active document
-    active_document = my_db.get_subchapter_from_section("Psychology2e", section)
+async def generate_summary_and_questions(section: str = "1.1"):
+    # Get a response for the current section
+    logger.debug(f"Section: {section}")
+    response = qdrant_search("Psychology2e", section)
     
     # Retrieve summary and questions
-    summary = my_tutor.summarize_text(text=active_document)
-    questions = my_tutor.shortanswer_questions(5, text=active_document)
+    summary = my_tutor.summarize_text(text="Section " + str(section) + " of " + response["chapter"] + ": " + response["text"])
+    questions = my_tutor.shortanswer_questions(5, text=summary)
 
     # Return the summary and questions
     return{"summary": summary, "questions": questions}
 
 @app.get("/retrieve-document")
 async def retrieve_document():
-    document = active_document
+    document = None
     return {"document": document}
 
-# Define the Query model to accept question and user_answer
+# Define the Query model to accept question, user answer and summary
 class Query(BaseModel):
     question: str
     user_answer: str
+    summary: str
 
 @app.post("/query")
 async def query_llm(query: Query):
     # Extract the question and user answer from the request body
     user_question = query.question
     user_answer = query.user_answer
+    summary = query.summary
 
     # Process the question and user answer with your tutor instance
     # Assuming `my_tutor.process_query` handles both the question and answer
-    response, score = my_tutor.shortanswer_evaluate(user_question, user_answer)
+    response, score = my_tutor.shortanswer_evaluate(user_question, user_answer, text=summary)
 
     return {"response": response, "score": score}

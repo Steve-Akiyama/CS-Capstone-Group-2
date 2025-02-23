@@ -22,8 +22,17 @@ class QdrantConnect:
                 ]
             ),
         )
+        # Extract the title, chapter, and text from the first record's payload
+        title = records[0].payload.get("title")
+        chapter = records[0].payload.get("chapter")
         text = records[0].payload.get("text")
-        return text
+        
+        # Return all three values (title, chapter, text) along with the next_token
+        return {
+            "title": title,
+            "chapter": chapter,
+            "text": text
+        }
 
     def get_subchapter_from_title(self, collection_name: str, title: str):
         records, next_token = self.qdrant_client.scroll(
@@ -37,8 +46,17 @@ class QdrantConnect:
                 ]
             ),
         )
+        # Extract the title, chapter, and text from the first record's payload
+        title = records[0].payload.get("title")
+        chapter = records[0].payload.get("chapter")
         text = records[0].payload.get("text")
-        return text
+        
+        # Return all three values (title, chapter, text) along with the next_token
+        return {
+            "title": title,
+            "chapter": chapter,
+            "text": text
+        }
     
     def get_chapter_from_chapter(self, collection_name: str, title: str):
         records, next_token = self.qdrant_client.scroll(
@@ -52,5 +70,14 @@ class QdrantConnect:
                 ]
             ),
         )
+        # Extract the title, chapter, and text from the first record's payload
+        title = records[0].payload.get("title")
+        chapter = records[0].payload.get("chapter")
         text = records[0].payload.get("text")
-        return text
+        
+        # Return all three values (title, chapter, text) along with the next_token
+        return {
+            "title": title,
+            "chapter": chapter,
+            "text": text
+        }

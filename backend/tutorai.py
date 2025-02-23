@@ -2,6 +2,7 @@ from langchain_openai import OpenAI # Creates an instance of OpenAI's language m
 from langchain_core.runnables.base import RunnableSequence # Used to chain together runnable components such as prompts and models, to let you invoke sequentially
 from langchain.prompts import PromptTemplate  # Allows you to create templates for prompts you send to the model
 import re
+from logger import logger
 
 class TutorAI:
     """
@@ -30,11 +31,9 @@ class TutorAI:
         Creates multiple-choice questions about the text inputted.
     shortanswer_evaluate()
         Evaluates short answer question and answer pairs.
-    set_document_text()
-        Sets a default option for text being inputted.
     """
     
-    def __init__(self, openai_api_key="", temp=0.5, rec_accuracy=0.85, req_accuracy=0.6, system_message="You are a kind and helpful tutor teaching a student."):
+    def __init__(self, openai_api_key="", temp=0.5, rec_accuracy=0.85, req_accuracy=0.6, system_message="You are a kind and helpful tutor teaching me, a student."):
         # Initialize OpenAI's model with desired temperature, which defines the randomness of the output. Higher = more random!
         self.__llm = OpenAI(temperature=temp, api_key=openai_api_key)
 
@@ -45,29 +44,6 @@ class TutorAI:
 
         # Initalize prompts
         self.__prompt_init()
-
-        # Import or create document text
-        self.document_text = """
-        According to the American Psychiatric Association, a psychological disorder, or mental disorder, is “a
-        syndrome characterized by clinically significant disturbance in an individual's cognition, emotion regulation,
-        or behavior that reflects a dysfunction in the psychological, biological, or developmental processes underlying
-        mental functioning. Mental disorders are usually associated with significant distress in social, occupational, or
-        other important activities” (2013). Psychopathology is the study of psychological disorders, including their
-        symptoms, etiology (i.e., their causes), and treatment. The term
-        psychopathology can also refer to the
-        manifestation of a psychological disorder. Although consensus can be difficult, it is extremely important for
-        mental health professionals to agree on what kinds of thoughts, feelings, and behaviors are truly abnormal in
-        the sense that they genuinely indicate the presence of psychopathology. Certain patterns of behavior and inner
-        experience can easily be labeled as abnormal and clearly signify some kind of psychological disturbance. The
-        person who washes their hands 40 times per day and the person who claims to hear the voices of demons
-        exhibit behaviors and inner experiences that most would regard as abnormal: beliefs and behaviors that
-        suggest the existence of a psychological disorder. But, consider the nervousness a young man feels when
-        talking to an attractive person or the loneliness and longing for home a first-year student experiences during
-        her first semester of college—these feelings may not be regularly present, but they fall in the range of normal.
-        So, what kinds of thoughts, feelings, and behaviors represent a true psychological disorder? Psychologists work
-        to distinguish psychological disorders from inner experiences and behaviors that are merely situational,
-        idiosyncratic, or unconventional.
-        """
 
     def __prompt_init(self):
         """
@@ -87,12 +63,12 @@ class TutorAI:
 
         """
         # Summarization
-        sum_template = self.system_message + " Summarize the following text:\n\n{text}\n\nSummary:"
+        sum_template = self.system_message + " Give a list of learning objectives, then an extensive summary about the following text. Be thorough, and make sure you don't leave out details. Text:\n\n{text}\n\nSummary:"
         sum_prompt = PromptTemplate(input_variables=["text"], template=sum_template)
         self.summarization_chain = RunnableSequence(sum_prompt | self.__llm) # Set up the summarization chain
 
         # Short-Answer Questions
-        shortanswer_question_template = self.system_message + " You are tasked with asking students {count} questions about the following text:\n\n{text}\n\nQuestions should be seperated by a new line. Questions:"
+        shortanswer_question_template = self.system_message + " You are tasked with asking students {count} questions about the content within the following text. Please make sure you address each learning objective.:\n\n{text}\n\nQuestions should be seperated by a new line. Questions:"
         shortanswer_question_prompt = PromptTemplate(input_variables=["text"], template=shortanswer_question_template)
         self.shortanswer_question_chain = RunnableSequence(shortanswer_question_prompt | self.__llm)
 
@@ -102,18 +78,18 @@ class TutorAI:
         self.multiplechoice_question_chain = RunnableSequence(multiplechoice_question_prompt | self.__llm)
 
         # Short-Answer Evaluation
-        shortanswer_evaluation_template = self.system_message + " Use the following text:\n\n{text}\n\nTo evaluate the following question and answer. Please evaluate the answer based on the text with a score of 1-10 and an explanation for your score, quoting the text. Question:\n\n{question}\n\n Student's answer:\n\n{answer}\n\n The template should look like this: Score:\nEvaluation:"
+        shortanswer_evaluation_template = self.system_message + " Use the following text:\n\n{text}\n\nTo evaluate the following question and answer, directing the evaluation me, your student. Please evaluate the answer based on the text with a score of 1-10 and a short explanation for your score, quoting the text if necessary. Question:\n\n{question}\n\n Student's answer:\n\n{answer}\n\n The template should look like this: Score:\nEvaluation:"
         shortanswer_evaluation_prompt = PromptTemplate(input_variables=["text", "question", "answer"], template=shortanswer_evaluation_template)
         self.shortanswer_evaluation_chain = RunnableSequence(shortanswer_evaluation_prompt | self.__llm)
 
-    def summarize_text(self, text=None):
+    def summarize_text(self, text):
         """
         Summarizes text through OpenAI's API
     
         Parameters:
         ----------
         text : str
-            Text to be summarized. If blank, uses the instances' document_text.
+            Text to be summarized. 
     
         Returns:
         -------
@@ -125,12 +101,22 @@ class TutorAI:
         None:
 
         """
-        if not text: text = self.document_text
-        summary = self.summarization_chain.invoke({"text": text})
+        if not text: 
+            # Gives error text (Prevents program crash)
+            text = "ERROR" 
+            logger.error("No text provided for shortanswer evaluation.")
+        
+        logger.debug(f"Sending summarization request: {text[:1000]}")
+        
+        # Retrieve the summary
+        summary = self.summarization_chain.invoke({"text": text[:3500]})
         self.summary = summary # Caches the summary
+        
+        logger.debug(f"Summary recieved: {summary[:1000]}")
+        
         return summary
     
-    def shortanswer_questions(self, count, text=None):
+    def shortanswer_questions(self, count, text):
         """
         Creates <count> short answer questions about the provided text.
     
@@ -139,7 +125,7 @@ class TutorAI:
         count : int
             How many questions to generate.
         text : str
-            The text to create questions from. Will evaluate to document_text if not set.
+            The text to create questions from. 
     
         Returns:
         -------
@@ -151,9 +137,15 @@ class TutorAI:
         None
             
         """
-        if not text: text = self.document_text
+        if not text: 
+            # Gives error text (Prevents program crash)
+            text = "ERROR" 
+            logger.error("No text provided for shortanswer evaluation.")
+
+        logger.debug(f"Sending shortanswer request for {count} questions: {text[:1000]}")
         questions = self.shortanswer_question_chain.invoke({"count": count, "text": text}) # Get the set of questions
         question_set = questions.strip().strip('\n').split('\n') # Split the questions into a list
+        logger.debug(f"Recieved questions: {questions[:1000]}")
         if '' in question_set:
             question_set.remove('')
         for i in range(len(question_set)):
@@ -161,9 +153,12 @@ class TutorAI:
 
         return question_set
     
-    def multiplechoice_questions(self, count, text=None):
+    def multiplechoice_questions(self, count, text):
         # Set up the document text as default
-        if not text: text = self.document_text
+        if not text: 
+            # Gives error text (Prevents program crash)
+            text = "ERROR" 
+            logger.error("No text provided for shortanswer evaluation.")
 
         # Invoke the question chain
         questions = self.multiplechoice_question_chain.invoke({"count": count, "text": text})
@@ -206,7 +201,7 @@ class TutorAI:
         else:
             return False
     
-    def shortanswer_evaluate(self, question, answer, text=None):
+    def shortanswer_evaluate(self, question, answer, text):
         """
         Evaluates the responses to short-answer questions.
     
@@ -217,7 +212,7 @@ class TutorAI:
         answer : str
             The answer that is being evaluated
         text : str 
-            The document that is being evaluated against. Will initalize to document_text if not set.
+            The document that is being evaluated against.
     
         Returns:
         -------
@@ -229,11 +224,20 @@ class TutorAI:
         None
             
         """
-        if not text: text = self.document_text # Get the default text if text is not specified
+        if not text: 
+            # Gives error text (Prevents program crash)
+            text = "ERROR" 
+            logger.error("No text provided for shortanswer evaluation.")
 
         # Have the llm evaluate
         evaluation = self.shortanswer_evaluation_chain.invoke({"text": text, "question": question, "answer": answer})
         score = " ".join(evaluation.split("/"))
+
+        if not any(char.isdigit() for char in score):
+            score = "0"
+
+        logger.info(f"Q/A: {question} / {answer} | Evaluation: {evaluation.strip()}")
+
 
         # If possible, parse the evaluation so it is less ugly.
         match = re.search(r'(?<=Evaluation: ).*', evaluation)
@@ -247,11 +251,3 @@ class TutorAI:
                 break
             
         return evaluation, score
-
-    ####################################################################
-    # Setter functions
-    ####################################################################
-
-    # Updates the document text
-    def set_document_text(self, new_text):
-        self.document_text = new_text
