@@ -12,22 +12,26 @@ Usage:
     Handles API calls from the front-end
 
 Future Updates:
-    When live, will need to modify allow_origins to accomadate 
-    the actual link. Will also need add features as TutorAI gains them.
+    When live, will need to modify allow_origins to accommodate 
+    the actual link. Will also need to add features as TutorAI gains them.
 ------------------------------------------------------------
 """
+
 from tutorai import TutorAI
 from qdrant import QdrantConnect
 
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from fastapi import Depends
+from fastapi import Depends # Currently unused
+from logger import logger
 
 from dotenv import load_dotenv # Allows you to load environment variables from a .env file
 import os # Allows you to access environment variables
-from logger import logger
+import uvicorn
+from fastapi.responses import FileResponse
+import os
 
 ##############################
 # Environment Variables      #
@@ -76,12 +80,14 @@ def qdrant_search(cluster, section):
     
     return response
 
+backend_router = APIRouter()
+
 # Define a basic route for testing
-@app.get("/")
+@backend_router.get("/")
 def read_root():
     return {"message": "Hello, World!"}
 
-@app.get("/generate-summary-and-questions")
+@backend_router.get("/generate-summary-and-questions")
 async def generate_summary_and_questions(section: str = "1.1"):
     # Get a response for the current section
     logger.debug(f"Section: {section}")
@@ -94,11 +100,6 @@ async def generate_summary_and_questions(section: str = "1.1"):
     # Return the summary and questions
     return{"summary": summary, "questions": questions}
 
-@app.get("/retrieve-document")
-async def retrieve_document():
-    document = None
-    return {"document": document}
-
 # Define the Query model to accept question, user answer and summary
 class Query(BaseModel):
     question: str
@@ -107,7 +108,7 @@ class Query(BaseModel):
     user_id: str
     id: str
 
-@app.post("/query")
+@backend_router.post("/query")
 async def query_llm(query: Query):
     # Extract the question and user answer from the request body
     user_question = query.question
@@ -122,5 +123,17 @@ async def query_llm(query: Query):
 
     logger.info(f"User ID: {id}.{user_id} Q/A: {user_question} / {user_answer} | Score: {score.strip()} Evaluation: {response.strip()}")
 
-
     return {"response": response, "score": score}
+
+app.include_router(backend_router, prefix="/tutorai/api")
+
+# Serve favicon.ico explicitly
+@app.get("/favicon.ico")
+async def favicon():
+    if os.path.exists("favicon.ico"):
+        return FileResponse("favicon.ico")
+    else:
+        return {"message": "Favicon not found."}
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=80, reload=True)

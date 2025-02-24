@@ -3,8 +3,8 @@ import axios from 'axios';
 import './styles/dark.css';
 
 const BASE_URL = window.location.origin.includes('localhost')
-    ? 'http://localhost:8000'
-    : 'http://52.15.75.24:8000';
+    ? 'http://localhost/tutorai'
+    : 'http://52.15.75.24/tutorai';
 
 // New Student Login Component
 const StudentLogin = ({ onLogin }) => {
