@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Portal Login</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #222;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .container {
+            max-width: 400px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .input-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        input {
+            width: 40px;
+            height: 50px;
+            font-size: 24px;
+            text-align: center;
+            border-radius: 5px;
+            border: none;
+            background: white;
+        }
+        .button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: #476caf;
+            color: black;
+            text-decoration: none;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Enter Your Student ID</h1>
+        <form id="student-form" method="POST">
+            <div class="input-container">
+                <input type="text" id="digit1" maxlength="1" pattern="[0-9]" required>
+                <input type="text" id="digit2" maxlength="1" pattern="[0-9]" required>
+                <input type="text" id="digit3" maxlength="1" pattern="[0-9]" required>
+                <input type="text" id="digit4" maxlength="1" pattern="[0-9]" required>
+            </div>
+            <input type="hidden" name="student_id" id="student_id">
+            <button type="submit" class="button">Submit</button>
+        </form>
+        {% if error_message %}
+            <p class="error">{{ error_message }}</p>
+        {% endif %}
+    </div>
+
+    <script>
+        const inputs = document.querySelectorAll(".input-container input");
+        const studentForm = document.getElementById("student-form");
+        const studentIdInput = document.getElementById("student_id");
+
+        inputs.forEach((input, index) => {
+            input.addEventListener("input", (e) => {
+                // Move to the next input when a digit is entered
+                if (e.target.value.length === 1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+            });
+
+            input.addEventListener("keydown", (e) => {
+                // Move to the previous input when backspace is pressed
+                if (e.key === "Backspace" && index > 0 && input.value === "") {
+                    inputs[index - 1].focus();
+                }
+            });
+        });
+
+        studentForm.addEventListener("submit", (e) => {
+            let studentId = "";
+            inputs.forEach(input => {
+                studentId += input.value;
+            });
+
+            // Ensure exactly 4 digits are entered
+            if (studentId.length !== 4) {
+                alert("Please enter all 4 digits.");
+                e.preventDefault();
+                return;
+            }
+
+            studentIdInput.value = studentId; // Store combined value in hidden input
+        });
+    </script>
+</body>
+</html>
