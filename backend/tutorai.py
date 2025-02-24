@@ -236,9 +236,6 @@ class TutorAI:
         if not any(char.isdigit() for char in score):
             score = "0"
 
-        logger.info(f"Q/A: {question} / {answer} | Evaluation: {evaluation.strip()}")
-
-
         # If possible, parse the evaluation so it is less ugly.
         match = re.search(r'(?<=Evaluation: ).*', evaluation)
         if match:

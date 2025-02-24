@@ -104,6 +104,8 @@ class Query(BaseModel):
     question: str
     user_answer: str
     summary: str
+    user_id: str
+    id: str
 
 @app.post("/query")
 async def query_llm(query: Query):
@@ -111,9 +113,14 @@ async def query_llm(query: Query):
     user_question = query.question
     user_answer = query.user_answer
     summary = query.summary
+    user_id = query.user_id
+    id = query.id
 
     # Process the question and user answer with your tutor instance
     # Assuming `my_tutor.process_query` handles both the question and answer
     response, score = my_tutor.shortanswer_evaluate(user_question, user_answer, text=summary)
+
+    logger.info(f"User ID: {id}.{user_id} Q/A: {user_question} / {user_answer} | Score: {score.strip()} Evaluation: {response.strip()}")
+
 
     return {"response": response, "score": score}

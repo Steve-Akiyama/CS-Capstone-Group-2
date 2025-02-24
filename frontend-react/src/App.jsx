@@ -1,16 +1,87 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import './App.css'; // Import the CSS file
+import './styles/dark.css';
 
 const BASE_URL = window.location.origin.includes('localhost')
-    ? 'http://localhost:8000'  // If running locally, assume backend is on localhost:8000
-    : 'http://52.15.75.24:8000';  // Replace with your production backend URL
+    ? 'http://localhost:8000'
+    : 'http://52.15.75.24:8000';
+
+// New Student Login Component
+const StudentLogin = ({ onLogin }) => {
+    const [digits, setDigits] = useState(['', '', '', '']);
+    const [error, setError] = useState('');
+    const inputsRef = useRef([]);
+
+    const handleDigitChange = (index, value) => {
+        if (/^\d?$/.test(value)) {
+            const newDigits = [...digits];
+            newDigits[index] = value;
+            setDigits(newDigits);
+            
+            if (value && index < 3) {
+                inputsRef.current[index + 1].focus();
+            }
+        }
+    };
+
+    const handleKeyDown = (index, e) => {
+        if (e.key === 'Backspace' && !digits[index] && index > 0) {
+            inputsRef.current[index - 1].focus();
+        }
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        const studentId = digits.join('');
+        
+        if (studentId.length !== 4) {
+            setError('Please enter all 4 digits');
+            return;
+        }
+
+        onLogin(studentId);
+    };
+
+    return (
+        <div className="splash-container">
+            <div className="splash-content">
+                <h1>Enter Your Survey ID</h1>
+                <form onSubmit={handleSubmit}>
+                    <div className="input-container">
+                        {digits.map((digit, index) => (
+                            <input
+                                key={index}
+                                ref={el => inputsRef.current[index] = el}
+                                type="text"
+                                maxLength="1"
+                                value={digit}
+                                onChange={(e) => handleDigitChange(index, e.target.value)}
+                                onKeyDown={(e) => handleKeyDown(index, e)}
+                                pattern="[0-9]"
+                                required
+                            />
+                        ))}
+                    </div>
+                    <button type="submit" className="splash-button">
+                        Submit
+                    </button>
+                    {error && <p className="error-message">{error}</p>}
+                </form>
+            </div>
+        </div>
+    );
+};
 
 const App = () => {
     const dataFetched = useRef(false);
     const chatContainerRef = useRef(null); // Reference for the chat container
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id') || '<No-ID-Provided-in-URL>';
 
+    // Active user answer (Input field)
     const [answer, setAnswer] = useState('');
+
+    // Retrieve state variables from localStorage if available, or create them
     const [questions, setQuestions] = useState(() => {
         const saved = localStorage.getItem("questions");
         return saved ? JSON.parse(saved) : [];
@@ -31,45 +102,52 @@ const App = () => {
         const saved = localStorage.getItem("score");
         return saved ? JSON.parse(saved) : 0;
     });
+    const [studentId, setStudentId] = useState(() => {
+        const saved = localStorage.getItem("studentId");
+        return saved ? JSON.parse(saved) : null;
+    });    
+    const [currentModule, setCurrentModule] = useState(() => {
+        const saved = localStorage.getItem("currentModule");
+        return saved ? JSON.parse(saved) : '6.1';
+    });
+
+    // These state variables don't need to be saved locally.
     const [submitDisabled, setSubmitDisabled] = useState(false);
-    const [currentModule, setCurrentModule] = useState('6.1');
     const [nextSectionClicked, setNextSectionClicked] = useState(false); // Track button click state
+    const [timeLeft, setTimeLeft] = useState(20 * 60); // 20 minutes in seconds
 
     // Save state changes to localStorage
     useEffect(() => {
         localStorage.setItem("questions", JSON.stringify(questions));
     }, [questions]);
-
     useEffect(() => {
         localStorage.setItem("currentQuestionIndex", JSON.stringify(currentQuestionIndex));
     }, [currentQuestionIndex]);
-
     useEffect(() => {
         localStorage.setItem("answers", JSON.stringify(answers));
     }, [answers]);
-
     useEffect(() => {
         localStorage.setItem("summary", JSON.stringify(summary));
     }, [summary]);
-
     useEffect(() => {
         localStorage.setItem("score", JSON.stringify(score));
     }, [score]);
-
-    // Extract fetch logic into a function so we can call it on mount or on reset
-    const initializeContent = async () => {
-        try {
-            const res = await axios.get(`${BASE_URL}/generate-summary-and-questions`, { 
-                params: { section: currentModule } 
-            });
-            setSummary(res.data.summary);
-            setQuestions(res.data.questions);
-            dataFetched.current = true;
-        } catch (error) {
-            console.error("Error fetching summary and questions:", error);
-        }
-    };
-
+    useEffect(() => {
+        localStorage.setItem("studentId", JSON.stringify(studentId));
+    }, [studentId]);
+    useEffect(() => {
+        localStorage.setItem("currentModule", JSON.stringify(currentModule));
+    }, [currentModule]);
+    
+    // Timer for survey
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setTimeLeft((prev) => prev - 1);
+        }, 1000);
+    
+        return () => clearTimeout(timer);
+    }, [timeLeft]);
+    
     // Fetch document once when the component mounts
     useEffect(() => {
         const fetchDocument = async () => {
@@ -89,6 +167,27 @@ const App = () => {
             initializeContent();
         }
     }, []); // Runs once on mount
+
+    // Auto-scroll to the bottom of the chat container whenever the questions or answers change
+    useEffect(() => {
+        if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }
+    }, [answers, currentQuestionIndex]);
+
+    // Extract fetch logic into a function so we can call it on mount or on reset
+    const initializeContent = async () => {
+        try {
+            const res = await axios.get(`${BASE_URL}/generate-summary-and-questions`, { 
+                params: { section: currentModule } 
+            });
+            setSummary(res.data.summary);
+            setQuestions(res.data.questions);
+            dataFetched.current = true;
+        } catch (error) {
+            console.error("Error fetching summary and questions:", error);
+        }
+    };
 
     // Reset function to clear stored state and re-fetch content
     const handleReset = async () => {
@@ -158,7 +257,9 @@ const App = () => {
             const res = await axios.post(`${BASE_URL}/query`, { 
                 question: questions[currentQuestionIndex], 
                 user_answer: userAnswer,
-                summary: summary
+                summary: summary,
+                user_id: studentId,
+                id: id 
             });
 
             setAnswers([
@@ -181,12 +282,10 @@ const App = () => {
         }
     };
 
-    // Auto-scroll to the bottom of the chat container whenever the questions or answers change
-    useEffect(() => {
-        if (chatContainerRef.current) {
-            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-        }
-    }, [answers, currentQuestionIndex]);
+    // Use a screen splash to request a student ID, if not provided
+    if (!studentId) {
+        return <StudentLogin onLogin={setStudentId} />;
+    }
 
     // If summary or questions are not loaded yet, show a loading message
     if (!summary || questions.length === 0) {
@@ -196,6 +295,18 @@ const App = () => {
             </div>
         );
     }
+
+    // If the timer runs out, use a popup to ask users to complete the survey
+    if (timeLeft <= 0) {
+        return (                
+        <div className="modal-overlay">
+            <div className="modal">
+                <h2>Time's Up!</h2>
+                <p>Please return to the survey.</p>
+                <button onClick={() => setTimeLeft(1200)}>OK</button>
+            </div>
+        </div>
+    )};
 
     return (
         <div className="app-container">

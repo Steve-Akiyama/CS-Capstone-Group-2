@@ -145,3 +145,26 @@
 - Add options to switch between chapters.
 - Make chapter stopping dynamic.
 - Integrate MCQs.
+- Add survey ID input.
+- Add a timer.
+
+## [v1.2.3] - 2/23/2025 - Maile Look & Steven Akiyama
+## Splash Screen, User ID's, Timer Popup System
+### Added
+- Added a splash screen to ask for user ID input (For logging purposes)
+- Added a timer popup that lets the user know when 20 minutes has elapsed (For survey purposes)
+- Added user ID input via query params (In addition to the splash screen)
+- Added a light mode file (Currently unused)
+
+### Changed
+- Added user IDs and query IDs to the question logging
+- Moved question logging from tutorai.py to main.py (Backend)
+- Renamed App.css to dark.css, and moved all css files to frontend-react/styles/
+
+**frontend-react\App.jsx**
+- Gave the code an organizational pass it badly needed
+
+### Next Steps
+- Add options to switch between chapters
+- Make chapter stopping dynamic
+- Integrate MCQs
