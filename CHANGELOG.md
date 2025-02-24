@@ -19,7 +19,7 @@
 ### Next Steps
 - Fix an issue where accessing the program through a domain name listing causes the connection between backend and frontend to be severed.
 
-## [Unreleased] - 2/16/2025 - Steven Akiyama
+## [v1.0.0] - 2/16/2025 - Steven Akiyama
 ## Chapter Progression Release
 ### Added
 - Added the ability for users to generate and append new questions from the next subsection of the textbook.
