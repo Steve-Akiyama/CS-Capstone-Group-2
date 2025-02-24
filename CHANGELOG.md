@@ -1,3 +1,29 @@
+## [Unreleased] - 11/14/2024 - Steven Akiyama
+## TutorAI Backend Prototype
+- Completed the backend portion of TutorAI (Working title)
+
+## [Unreleased] - 12/3/2024 - Steven Akiyama
+## React Frontend!
+### Added
+- Added a frontend to the program using React JS. 
+- Added a main.py file to backend that includes backend calls to connect with the new frontend.
+
+## [Unreleased] - 12/5/2024 - Steven Akiyama
+## Testing Suites, Refactoring
+### Added
+- Added testing suites for App.jsx, main.py, tutorai.py.
+
+### Changed
+- Refactored App.jsx and index.jsx to be more readable.
+
+## [Unreleased] - 1/24/2025 - Steven Akiyama
+## Dynamic Link Modification, Dark Mode, EC2 Server Setup
+### Changed
+- Changed the linking and CORS handling to adjust dynamically depending on .env variables.
+- Did a pass with the README.txt to update against ongoing changes to hosting/additions.
+- App.css now is formatted in dark mode! 3am users (And developers) rejoice!
+- Updated vite configuration for server use
+
 ## [Unreleased] - 2/7/2025 - Steven Akiyama
 ## RAG Release
 ### Added
