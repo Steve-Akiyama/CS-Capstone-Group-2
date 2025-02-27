@@ -185,19 +185,42 @@ body {
   color: #52c41a;
 }
 
-/* Reset Button */
-.reset-button {
-  padding: 6px 12px;
+/* Timer and Reset Container */
+.timer-reset-container {
+  position: absolute;
+  right: 20px;
+  top: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; /* Aligns both items to the right */
+  gap: 5px; /* Small spacing between the reset button and timer */
+}
+
+/* Reset Button & Timer */
+.reset-button, .timer {
+  padding: 8px 16px;
   background: #dc3545;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
-  position: absolute;
-  right: 20px;
-  top: 10px;
+  text-align: center;
+  white-space: nowrap; /* Prevents text from wrapping */
+  min-width: 80px; /* Ensures a reasonable minimum width */
+  width: auto; /* Makes width dynamic based on content */
+  max-width: 200px; /* Prevents excessive stretching */
 }
+
+/* Ensure they are stacked correctly */
+.reset-button {
+  position: relative; /* Keep relative within the flex container */
+}
+
+.timer {
+  position: relative; /* Keep relative within the flex container */
+}
+
 
 .reset-button:hover {
   background: #c82333;

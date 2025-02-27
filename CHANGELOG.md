@@ -194,3 +194,8 @@
 - Add options to switch between chapters
 - Make chapter stopping dynamic
 - Integrate MCQs
+
+## [v1.2.4] - Steven Akiyama
+## UI Pass
+### Added
+- Added a non-functional timer button near the reset button
