@@ -1,87 +1,60 @@
-## [Unreleased] - 11/14/2024 - Steven Akiyama
-## TutorAI Backend Prototype
-- Completed the backend portion of TutorAI (Working title)
-
-## [Unreleased] - 12/3/2024 - Steven Akiyama
-## React Frontend!
+## [v1.2.4] - 3/13/2025 - Steven Akiyama
+## UI Pass
 ### Added
-- Added a frontend to the program using React JS. 
-- Added a main.py file to backend that includes backend calls to connect with the new frontend.
+- Added a non-functional timer button near the reset button
 
-## [Unreleased] - 12/5/2024 - Steven Akiyama
-## Testing Suites, Refactoring
+## [v1.2.3] - 2/23/2025 - Maile Look & Steven Akiyama
+## Splash Screen, User ID's, Timer Popup System
 ### Added
-- Added testing suites for App.jsx, main.py, tutorai.py.
+- Added a splash screen to ask for user ID input (For logging purposes)
+- Added a timer popup that lets the user know when 20 minutes has elapsed (For survey purposes)
+- Added user ID input via query params (In addition to the splash screen)
+- Added a light mode file (Currently unused)
 
 ### Changed
-- Refactored App.jsx and index.jsx to be more readable.
+- Added user IDs and query IDs to the question logging
+- Moved question logging from tutorai.py to main.py (Backend)
+- Renamed App.css to dark.css, and moved all css files to frontend-react/styles/
 
-## [Unreleased] - 1/24/2025 - Steven Akiyama
-## Dynamic Link Modification, Dark Mode, EC2 Server Setup
-### Changed
-- Changed the linking and CORS handling to adjust dynamically depending on .env variables.
-- Did a pass with the README.txt to update against ongoing changes to hosting/additions.
-- App.css now is formatted in dark mode! 3am users (And developers) rejoice!
-- Updated vite configuration for server use
-
-## [Unreleased] - 2/7/2025 - Steven Akiyama
-## RAG Release
-### Added
-- Program now uses retrieval-augmented generation (RAG) using a basic, static retriever.
-- Added the `CHANGELOG.md` file
-- Created QdrantConnect, a class for retrieving points from a Qdrant Cloud DB
-
-### Changed
-- README and backend updated to reflect additions
-
-### Fixed
-- Fixed an issue where pressing the submit button multiple times before await completed would cause multiple API calls.
-- Fixed an issue where edits in the submission window would cause the textbook content to be re-rendered
-
-### Removed
-- Removed shortanswer_complete_terminal, as it was depreciated and no longer functional.
-- Removed vdatabase, as it wasn't implemented. 
-
-### Next Steps
-- Fix an issue where accessing the program through a domain name listing causes the connection between backend and frontend to be severed.
-
-## [v1.0.0] - 2/16/2025 - Steven Akiyama
-## Chapter Progression Release
-### Added
-- Added the ability for users to generate and append new questions from the next subsection of the textbook.
-- Added a button to do this, that displays once all submissions have been sent.
-
-### Changed
-- Modified the front-end to only show submission button & window when not all questions are answered.
-- Modified the chatlogs to contain a scrolly, so the summary is always visible.
-
-### Fixed
-- Fixed an issue where accessing the program through a domain name caused the connection to fail.
-
-### Removed
-- Removed textbook content visualization, as it wasn't user-friendly post RAG implementation.
-
-### Next Steps
-- Possibly add a PDF viewer?
-
-### Known Issues 
-- New questions is oblivious to chapters (Will continue past the end of a chapter, i.e. if chapter 6 ends at 6.5, the program will continue to a non-existant 6.6, 6.7 etc.)
-- Not a full issue, but currently has no memory between page loads. This is apparent with multiple subchapter usage.
-
-## [v1.1.0] - 2/19/2025 - Steven Akiyama
-## Hotfix & QOL
-### Changed
-- Modified the UI to better accomadate the new chatlogging.
-
-### Fixed
-- Fixed an issue with moving through sections. Questions button is still oblivious to chapters, but is hidden at the end of chapter 6 (Hard-coded)
+**frontend-react\App.jsx**
+- Gave the code an organizational pass it badly needed
 
 ### Next Steps
 - Add options to switch between chapters
 - Make chapter stopping dynamic
-- Add loading notifications
 - Integrate MCQs
-- Integrate chatlogging
+
+## [v1.2.2] - 2/23/2025 - Steven Akiyama
+## LocalStorage, UI, App.jsx Refactor
+### Added
+**frontend-react\App.jsx**
+- Added local storage for the tutor. No more constant reloads!
+- Added a button to reload the content. (More constant reloads?)
+- Added a loading message while content is loading.
+
+### Changed
+**frontend-react\App.jsx**
+- Refactored a lot of the code! Figured I might as well, since I was already implementing a lot here.
+
+**frontend-react\App.css**
+- Shrunk some padding/margins to allow for more content on screen.
+
+### Fixed
+**backend\tutorai.py**
+- Fixed an issue where LLM responses were cut off by token maxing. It's still somewhat possible, but *should* happen less frequently now.
+
+### Next Steps
+- Add options to switch between chapters.
+- Make chapter stopping dynamic.
+- Integrate MCQs.
+- Add survey ID input.
+- Add a timer.
+
+## [v1.2.1] - 2/23/2025 - Steven Akiyama
+## Small Hotfix
+### Changed
+**frontend-react\App.css**
+- Updated the textbook summary area to include a scrolly, and only take max 40% of page size.
 
 ## [v1.2.0] - 2/23/2025 - Steven Akiyama
 ## Logging, UI & Refactoring
@@ -142,60 +115,55 @@
 **backend/tutorai.py**:
 - Summaries are occasionally cut off due to token count limitations.
 
-## [v1.2.1] - 2/23/2025 - Steven Akiyama
-## Small Hotfix
+## [v1.1.0] - 2/19/2025 - Steven Akiyama
+## Hotfix & QOL
 ### Changed
-**frontend-react\App.css**
-- Updated the textbook summary area to include a scrolly, and only take max 40% of page size.
-
-## [v1.2.2] - 2/23/2025 - Steven Akiyama
-## LocalStorage, UI, App.jsx Refactor
-### Added
-**frontend-react\App.jsx**
-- Added local storage for the tutor. No more constant reloads!
-- Added a button to reload the content. (More constant reloads?)
-- Added a loading message while content is loading.
-
-### Changed
-**frontend-react\App.jsx**
-- Refactored a lot of the code! Figured I might as well, since I was already implementing a lot here.
-
-**frontend-react\App.css**
-- Shrunk some padding/margins to allow for more content on screen.
+- Modified the UI to better accommodate the new chatlogging.
 
 ### Fixed
-**backend\tutorai.py**
-- Fixed an issue where LLM responses were cut off by token maxing. It's still somewhat possible, but *should* happen less frequently now.
-
-### Next Steps
-- Add options to switch between chapters.
-- Make chapter stopping dynamic.
-- Integrate MCQs.
-- Add survey ID input.
-- Add a timer.
-
-## [v1.2.3] - 2/23/2025 - Maile Look & Steven Akiyama
-## Splash Screen, User ID's, Timer Popup System
-### Added
-- Added a splash screen to ask for user ID input (For logging purposes)
-- Added a timer popup that lets the user know when 20 minutes has elapsed (For survey purposes)
-- Added user ID input via query params (In addition to the splash screen)
-- Added a light mode file (Currently unused)
-
-### Changed
-- Added user IDs and query IDs to the question logging
-- Moved question logging from tutorai.py to main.py (Backend)
-- Renamed App.css to dark.css, and moved all css files to frontend-react/styles/
-
-**frontend-react\App.jsx**
-- Gave the code an organizational pass it badly needed
+- Fixed an issue with moving through sections. Questions button is still oblivious to chapters, but is hidden at the end of chapter 6 (Hard-coded)
 
 ### Next Steps
 - Add options to switch between chapters
 - Make chapter stopping dynamic
+- Add loading notifications
 - Integrate MCQs
+- Integrate chatlogging
 
-## [v1.2.4] - Steven Akiyama
-## UI Pass
+## [v1.0.0] - 2/16/2025 - Steven Akiyama
+## Chapter Progression Release
 ### Added
-- Added a non-functional timer button near the reset button
+- Added the ability for users to generate and append new questions from the next subsection of the textbook.
+- Added a button to do this, that displays once all submissions have been sent.
+
+### Changed
+- Modified the front-end to only show submission button & window when not all questions are answered.
+- Modified the chatlogs to contain a scrolly, so the summary is always visible.
+
+### Fixed
+- Fixed an issue where accessing the program through a domain name caused the connection to fail.
+
+### Removed
+- Removed textbook content visualization, as it wasn't user-friendly post RAG implementation.
+
+### Next Steps
+- Possibly add a PDF viewer?
+
+## [Unreleased] - 2/7/2025 - Steven Akiyama
+## RAG Release
+### Added
+- Program now uses retrieval-augmented generation (RAG) using a basic, static retriever.
+- Added the `CHANGELOG.md` file
+- Created QdrantConnect, a class for retrieving points from a Qdrant Cloud DB
+
+## [Unreleased] - 1/24/2025 - Steven Akiyama
+## Dynamic Link Modification, Dark Mode, EC2 Server Setup
+
+## [Unreleased] - 12/5/2024 - Steven Akiyama
+## Testing Suites, Refactoring
+
+## [Unreleased] - 12/3/2024 - Steven Akiyama
+## React Frontend!
+
+## [Unreleased] - 11/14/2024 - Steven Akiyama
+## TutorAI Backend Prototype
