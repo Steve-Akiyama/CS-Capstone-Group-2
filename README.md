@@ -46,6 +46,7 @@ Each point in the QDrant Cloud database should have the following structure:
 ```json
 {
   "title": "<string>",
+  "section": "<string>",
   "chapter": "<string>",
   "text": "<string>"
 }
