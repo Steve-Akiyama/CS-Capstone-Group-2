@@ -1,10 +1,11 @@
 # 🚀 Capstone Project (WIP)
 
 ## Participants
-- Varsha Narayan
-- Maile Look
-- Grant O'Connor
-- Steven Akiyama
+- Joseph Slade (Project Partner)
+- Varsha Narayan (Developer)
+- Maile Look (Developer)
+- Grant O'Connor (Developer)
+- Steven Akiyama (Developer)
 
 ## Project Description
 [View Project Details](https://eecs.engineering.oregonstate.edu/capstone/submission/pages/viewSingleProject.php?id=Qb8Mgf4wM8AXlkcX)
