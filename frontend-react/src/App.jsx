@@ -247,6 +247,16 @@ const App = () => {
         return `${chapter}.${updatedSection}`;
     };
 
+    function formatSeconds(totalSeconds) {
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+      
+        const formattedMinutes = String(minutes).padStart(2, '0');
+        const formattedSeconds = String(seconds).padStart(2, '0');
+      
+        return `${formattedMinutes}:${formattedSeconds}`;
+    }
+
     // Function to handle user submissions
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -314,7 +324,10 @@ const App = () => {
                 <div className="summary-header">
                     <h3>
                         Psychology2e Section {currentModule} Summary:
-                        <button onClick={handleReset} className="reset-button">Reset Page</button>
+                        <div class="timer-reset-container">
+                            <button className="timer">Time Remaining: {formatSeconds(timeLeft)}</button>
+                            <button onClick={handleReset} className="reset-button">Reset Page</button>
+                        </div>
                     </h3>
                 </div>
                 <p className="summary-content">{summary}</p>
