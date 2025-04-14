@@ -24,12 +24,14 @@ const StudentLogin = ({ onLogin }) => {
         }
     };
 
+    // Handle backspace to move to previous inputs
     const handleKeyDown = (index, e) => {
         if (e.key === 'Backspace' && !digits[index] && index > 0) {
             inputsRef.current[index - 1].focus();
         }
     };
 
+    // Form submission handler
     const handleSubmit = (e) => {
         e.preventDefault();
         const studentId = digits.join('');
@@ -42,6 +44,7 @@ const StudentLogin = ({ onLogin }) => {
         onLogin(studentId);
     };
 
+    // Splash page component
     return (
         <div className="splash-container">
             <div className="splash-content">
@@ -72,6 +75,8 @@ const StudentLogin = ({ onLogin }) => {
     );
 };
 
+// Main Application Component
+// This component handles the main functionality of the app, including fetching data, managing state, and rendering the UI.
 const App = () => {
     const dataFetched = useRef(false);
     const chatContainerRef = useRef(null); // Reference for the chat container
@@ -213,8 +218,28 @@ const App = () => {
         await initializeContent();
     };
 
+    // Function to retry current section and append new questions
+    const retrySection = async () => {
+        if (nextSectionClicked) return; // Prevent further clicks if already clicked
+        
+        try {
+            setNextSectionClicked(true); // Disable button when clicked
+
+            const res = await axios.get(`${BASE_URL}/generate-summary-and-questions`,
+                { params: { section: currentModule } }
+            );
+
+            // Append new questions to existing questions
+            setQuestions((prevQuestions) => [...prevQuestions, ...res.data.questions]);
+
+            setNextSectionClicked(false);
+        } catch (error) {
+            console.error("Error updating summary and questions:", error);
+        }
+    };
+
     // Function to update summary and append new questions
-    const updateSummaryAndQuestions = async () => {
+    const nextSection = async () => {
         if (nextSectionClicked) return; // Prevent further clicks if already clicked
         
         try {
@@ -320,6 +345,7 @@ const App = () => {
 
     return (
         <div className="app-container">
+            
             <div className="summary-container">
                 <div className="summary-header">
                     <h3>
@@ -332,6 +358,7 @@ const App = () => {
                 </div>
                 <p className="summary-content">{summary}</p>
             </div>
+
             <div className="chat-container" ref={chatContainerRef}>
                 <h3>Questions and Responses:</h3>
                 {questions.slice(0, currentQuestionIndex + 1).map((q, index) => (
@@ -378,10 +405,17 @@ const App = () => {
                             <h4>Current Score: {score}/{currentQuestionIndex * 10}</h4>
                         </div>
                     )}
+                    <button 
+                            className="next-section-button" 
+                            onClick={retrySection} 
+                            disabled={nextSectionClicked}
+                        >
+                            Repeat Section {currentModule}
+                        </button>
                     {currentModule !== "6.4" && (
                         <button 
                             className="next-section-button" 
-                            onClick={updateSummaryAndQuestions} 
+                            onClick={nextSection} 
                             disabled={nextSectionClicked}
                         >
                             Move to section {incrementModule(currentModule)}
