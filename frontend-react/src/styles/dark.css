@@ -87,21 +87,21 @@ body {
 }
 
 .user-bubble {
-  background: #3d5a80;
-  color: #fff;
+  background: #bfe4ff;
+  color: #000;
   align-self: flex-start;
   border: 1px solid #3a4e70;
 }
 
 .user-answer {
-  background: #2d6a4f;
-  color: #fff;
+  background: #d5fddb;
+  color: #000;
   align-self: flex-end;
   border: 1px solid #2a5f47;
 }
 
 .ai-response {
-  background: #9a8c98;
+  background: #d7daff;
   color: #000;
   align-self: flex-start;
   border: 1px solid #8b7c92;
